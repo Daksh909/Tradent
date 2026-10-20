@@ -26,7 +26,6 @@ interface FakeAccount {
 export class FakeBroker implements BrokerAdapter {
   private accounts = new Map<string, FakeAccount>();
   private prices = new Map<string, number>();
-  private seq = 0;
   marketOpen = true;
 
   constructor(private readonly now: () => Date = () => new Date()) {}
@@ -36,8 +35,9 @@ export class FakeBroker implements BrokerAdapter {
     this.prices.set(symbol, price);
   }
 
+  // Globally unique, like a real broker's ids, so two fake brokers never collide in one database.
   private nextId(prefix: string) {
-    return `${prefix}-${++this.seq}`;
+    return `${prefix}-${crypto.randomUUID()}`;
   }
 
   private account(id: string) {

@@ -14,3 +14,9 @@ Gap-filling choices made during the build, not decisions from SPEC.md's Decision
 | Sandbox funding | Test ACH relationship plus an incoming transfer for the starting cash | `packages/broker/src/alpaca.ts` |
 | Order time in force | `day` | `packages/broker/src/alpaca.ts` |
 | Options data label | "Options indicative" (Alpaca's free options feed) | `packages/broker/src/types.ts` |
+| Model turns per decision | At most 6; a decision with no `propose_orders` call is logged as no action | `packages/agent/src/runner.ts` |
+| Model effort | `medium` | `packages/agent/src/runner.ts` |
+| Fallback on a policy decline | Sonnet and Opus use Anthropic's server-side fallback; the serving model is saved in the log and priced at its own rate | `packages/agent/src/runner.ts`, `pricing.ts` |
+| Short selling | Not allowed; sells are capped at what's held, and no uncovered option writing | `packages/agent/src/guardrails.ts` |
+| Options order type | Limit orders only | `packages/agent/src/guardrails.ts` |
+| Price for the position check | Limit price, else the IEX mid quote | `packages/agent/src/runner.ts` |
