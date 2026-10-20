@@ -278,6 +278,7 @@ All decided by Daksh on 2026-10-20. Where anything above disagrees, this list wi
 | 14 | Backtesting | Smoke test only | Short run on recent data, developer-only, never in the trust record (LLM hindsight bias) |
 | 15 | What a strategy is | A reusable building block | Entry rules, exit rules, signals, TradingView alerts, tool setups; agents combine strategies with a model and risk limits; Library has Agents and Strategies tabs |
 | 16 | Market data shown to users | Free real-time IEX plus 15-minute-delayed all-exchange (SIP) | Every quote labeled with its source; paid real-time SIP and OPRA wait for live trading |
+| 17 | How people sign in | Google and GitHub, through Auth.js | Accounts live in our Postgres; Daksh creates one Google and one GitHub OAuth app. Until it ships, a demo user switcher stands in |
 
 ## Still open outside the code (Daksh's actions, none blocks the build)
 
