@@ -69,3 +69,6 @@ Gap-filling choices made during the build, not decisions from SPEC.md's Decision
 | Follow scale | Virtual amount divided by the agent account's equity when the follow starts: the broker's live equity when readable, otherwise the last daily close | `packages/agent/src/follow.ts` |
 | Who can follow | Any signed-in account, developers included; only Library-listed, not-stopped versions; one active follow per version | `apps/web/src/app/(app)/portfolio/actions.ts` |
 | Follow value | Updated at each daily close; stopping a follow freezes its value at the account's equity then | `packages/agent/src/follow.ts` |
+| Webhook secret | 24 random bytes in the webhook URL path (TradingView lets users set only the URL and the message); only its SHA-256 hash is stored; shown once; one webhook per agent, and replacing the secret stops the old URL | `packages/agent/src/webhooks.ts` |
+| Alert limits | Bodies up to 4 KB; at most 50 alerts waiting per agent (more get HTTP 429); JSON bodies stored as JSON, anything else as `{ text }` | `packages/agent/src/webhooks.ts` |
+| Webhook URL host | `BETTER_AUTH_URL`, else the request's host | `apps/web/src/app/(app)/spend/actions.ts` |
