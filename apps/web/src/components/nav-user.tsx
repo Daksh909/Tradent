@@ -1,10 +1,10 @@
 "use client";
 
-// Ported from shadcn-admin (MIT, src/components/layout/nav-user.tsx), with a demo user switcher.
+// Ported from shadcn-admin (MIT, src/components/layout/nav-user.tsx), with a demo user switcher in demo mode.
 import { useTransition } from "react";
-import { Check, ChevronsUpDown, Laptop, Moon, Sun, Users } from "lucide-react";
+import { Check, ChevronsUpDown, Laptop, LogOut, Moon, Sun, Users } from "lucide-react";
 import { useTheme } from "next-themes";
-import { switchDemoUser } from "@/app/actions";
+import { signOut, switchDemoUser } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -34,7 +34,7 @@ function roles(u: CurrentUser) {
   return [u.isDeveloper && "Developer", u.isInvestor && "Investor", u.isAdmin && "Admin"].filter(Boolean).join(" · ");
 }
 
-export function NavUser({ user, demoUsers }: { user: CurrentUser; demoUsers: CurrentUser[] }) {
+export function NavUser({ user, demoUsers, demoMode }: { user: CurrentUser; demoUsers: CurrentUser[]; demoMode: boolean }) {
   const { isMobile } = useSidebar();
   const { setTheme } = useTheme();
   const [pending, startTransition] = useTransition();
@@ -64,6 +64,7 @@ export function NavUser({ user, demoUsers }: { user: CurrentUser; demoUsers: Cur
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              {demoMode && (
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger disabled={pending}>
                   <Users /> Switch demo user
@@ -79,6 +80,7 @@ export function NavUser({ user, demoUsers }: { user: CurrentUser; demoUsers: Cur
                   ))}
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
+              )}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                   <Moon /> Theme
@@ -97,7 +99,9 @@ export function NavUser({ user, demoUsers }: { user: CurrentUser; demoUsers: Cur
               </DropdownMenuSub>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Demo sign-in. Real accounts come later.</DropdownMenuLabel>
+            <DropdownMenuItem onSelect={() => startTransition(() => signOut())}>
+              <LogOut /> Sign out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

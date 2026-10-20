@@ -59,4 +59,4 @@ The "Done means" checklist in SPEC.md passes, with automated tests for: guardrai
 
 ## Environment variables (names only; never commit values)
 
-`DATABASE_URL`, `ANTHROPIC_API_KEY`, `ALPACA_BROKER_API_KEY`, `ALPACA_BROKER_API_SECRET`, `ALPACA_BROKER_BASE_URL` (sandbox), `ALPACA_DATA_BASE_URL`. Provide `.env.example`.
+`DATABASE_URL`, `ANTHROPIC_API_KEY`, `ALPACA_BROKER_API_KEY`, `ALPACA_BROKER_API_SECRET`, `ALPACA_BROKER_BASE_URL` (sandbox), `ALPACA_DATA_BASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `TRADENT_DEMO_SIGN_IN` (local and tests only). Provide `.env.example`.
