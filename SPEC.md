@@ -279,6 +279,7 @@ All decided by Daksh on 2026-10-20. Where anything above disagrees, this list wi
 | 15 | What a strategy is | A reusable building block | Entry rules, exit rules, signals, TradingView alerts, tool setups; agents combine strategies with a model and risk limits; Library has Agents and Strategies tabs |
 | 16 | Market data shown to users | Free real-time IEX plus 15-minute-delayed all-exchange (SIP) | Every quote labeled with its source; paid real-time SIP and OPRA wait for live trading |
 | 17 | How people sign in | Google and GitHub | Built with Better Auth (open source; Auth.js's own README now recommends it for new projects). Accounts live in our Postgres; Daksh creates one Google and one GitHub OAuth app. A demo sign-in exists for local development and tests only |
+| 18 | What counts toward the $10 AI cap | Everything | Forward-test decisions, Studio chat builder messages and smoke tests all count, so each developer's AI bill stays capped at $10 a month |
 
 ## Still open outside the code (Daksh's actions, none blocks the build)
 

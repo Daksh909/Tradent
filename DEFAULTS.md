@@ -57,9 +57,11 @@ Gap-filling choices made during the build, not decisions from SPEC.md's Decision
 | Agent name and summary | Editable until the agent's first forward test, then fixed | `packages/agent/src/studio.ts` |
 | Studio opens | Your newest version, unless a version or fork is picked | `apps/web/src/app/(app)/studio/page.tsx` |
 | Tools per version | The runner offers only the version's chosen data tools plus propose_orders; a version with no tools listed gets all of them | `packages/agent/src/runner.ts` |
-| Chat builder model | Sonnet 5.5; its cost counts toward the developer's $10 monthly cap | `packages/agent/src/builder.ts` |
+| Chat builder model | Sonnet 5.5 (its cost counts toward the cap per Decision 18) | `packages/agent/src/builder.ts` |
 | Chat history | Kept only in the open page, not saved | `apps/web/src/components/studio/studio-workspace.tsx` |
 | Smoke test | One decision on the latest market data against a fresh $100,000 scratch account; no orders, no decision log; its cost counts toward the cap; runs any time, not only in market hours | `packages/agent/src/studio.ts` |
 | Combine | Adding blocks from a listed agent adds its strategies and tools and records it as a parent | `apps/web/src/components/studio/studio-workspace.tsx` |
 | Cost estimate in Studio | 8,000 input and 1,000 output tokens per decision, decisions per day rounded up over a 390-minute session, 21 trading days | `packages/agent/src/pricing.ts` |
 | Canvas | Built from the draft (inputs, then AI model, risk limits, broker); blocks are edited in the settings pane rather than wired by hand | `apps/web/src/components/studio/studio-canvas.tsx` |
+| Spend breakdown | Forward-test decisions and smoke tests from their own records; the Studio chat builder is the rest of the ledger total | `packages/agent/src/spend.ts` |
+| Spend month | Calendar month in UTC, as the spend ledger keys it | `packages/agent/src/spend.ts` |

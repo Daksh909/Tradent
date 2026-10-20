@@ -9,3 +9,4 @@ export * from "./forward-tests";
 export * from "./trading";
 export * from "./studio";
 export * from "./builder";
+export * from "./spend";
