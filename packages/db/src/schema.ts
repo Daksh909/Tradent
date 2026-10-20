@@ -1,5 +1,5 @@
 // Data model from SPEC.md "Build spec for Claude Code > Data model".
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   date,
@@ -241,10 +241,14 @@ export const follows = pgTable(
     investorId: uuid("investor_id").notNull().references(() => users.id),
     agentVersionId: uuid("agent_version_id").notNull().references(() => agentVersions.id),
     virtualAmount: money("virtual_amount").notNull(),
+    // The followed account's equity when the follow started and stopped. The follower
+    // holds virtualAmount / agentEquityAtStart of everything the account holds.
+    agentEquityAtStart: money("agent_equity_at_start").notNull(),
+    agentEquityAtStop: money("agent_equity_at_stop"),
     startedAt: createdAt(),
     stoppedAt: timestamp("stopped_at", { withTimezone: true }),
   },
-  (t) => [index("follows_investor").on(t.investorId)],
+  (t) => [index("follows_investor").on(t.investorId), uniqueIndex("follows_one_active").on(t.investorId, t.agentVersionId).where(sql`stopped_at is null`)],
 );
 
 export const spendLedger = pgTable(

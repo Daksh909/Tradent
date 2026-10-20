@@ -77,7 +77,7 @@ for (const seq of [1, 2]) {
   prevHash = hash;
 }
 
-await db.insert(s.follows).values({ investorId: investor.id, agentVersionId: version!.id, virtualAmount: "10000" });
+await db.insert(s.follows).values({ investorId: investor.id, agentVersionId: version!.id, virtualAmount: "10000", agentEquityAtStart: String(DEFAULT_STARTING_CASH_USD) });
 
 await client.end();
 console.log("Seeded demo users, 3 strategies, 1 agent with a locked version, 2 decisions and 1 follow");
