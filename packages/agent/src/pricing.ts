@@ -63,3 +63,14 @@ export function responseCost(requestedModel: string, usage: Anthropic.Beta.BetaU
   };
   return tokenCost(requestedModel, rest) + tokenCost(fallback.model, fallback);
 }
+
+// DEFAULT: the spec's cost assumption for one decision (SPEC.md "Limits and costs").
+export const ESTIMATE_TOKENS = { input: 8_000, output: 1_000 };
+const SESSION_MINUTES = 390;
+const TRADING_DAYS_PER_MONTH = 21;
+
+/** Estimated AI dollars a month for one agent at a cadence, before caching discounts. */
+export function estimateMonthlyCostUsd(model: AgentModel, cadenceMinutes: number): number {
+  const perDecision = tokenCost(MODEL_IDS[model], { input_tokens: ESTIMATE_TOKENS.input, output_tokens: ESTIMATE_TOKENS.output });
+  return perDecision * Math.ceil(SESSION_MINUTES / cadenceMinutes) * TRADING_DAYS_PER_MONTH;
+}

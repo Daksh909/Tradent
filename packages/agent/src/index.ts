@@ -7,3 +7,5 @@ export * from "./library";
 export * from "./testing";
 export * from "./forward-tests";
 export * from "./trading";
+export * from "./studio";
+export * from "./builder";
