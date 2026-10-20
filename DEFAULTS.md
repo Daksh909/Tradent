@@ -20,3 +20,9 @@ Gap-filling choices made during the build, not decisions from SPEC.md's Decision
 | Short selling | Not allowed; sells are capped at what's held, and no uncovered option writing | `packages/agent/src/guardrails.ts` |
 | Options order type | Limit orders only | `packages/agent/src/guardrails.ts` |
 | Price for the position check | Limit price, else the IEX mid quote | `packages/agent/src/runner.ts` |
+| Worker wake-up | Every 60 seconds; a slow tick never overlaps the next | `apps/worker/src/main.ts` |
+| Cadence clock | A version is due once its cadence has passed since its last logged decision; skipped runs (cap, closed, daily stop) log nothing and retry next tick | `packages/agent/src/scheduler.ts` |
+| Spend cap timing | Checked before each decision, one developer's agents run one at a time, so a developer can go past $10 by at most one decision | `packages/agent/src/scheduler.ts` |
+| DailyMetrics time | 5 minutes after the close on trading days (broker calendar), from the broker's account equity | `packages/agent/src/scheduler.ts` |
+| Killed agents' metrics | Still recorded daily, since they may still hold positions | `packages/agent/src/scheduler.ts` |
+| Trade count | Fills dated by their New York trading day | `packages/agent/src/scheduler.ts` |

@@ -15,9 +15,17 @@ pnpm db:seed      # demo users, strategies, one agent
 pnpm test
 ```
 
+To run agents, copy `.env.example` to `.env`, fill in Anthropic and Alpaca Broker API sandbox keys, then:
+
+```
+pnpm worker       # runs due agent decisions every minute in market hours, DailyMetrics after the close
+```
+
 ## Layout
 
 - `packages/core`: shared constants, risk limits, trust-record hash chain
 - `packages/db`: Postgres schema (Drizzle), migrations, seed
 - `packages/broker`: `BrokerAdapter` interface, Alpaca Broker API sandbox implementation, in-memory `FakeBroker`
-- `apps/`: web app and worker (coming in later steps)
+- `packages/agent`: one agent decision end to end, guardrails, hash-chained decision log, model prices, scheduler and DailyMetrics
+- `apps/worker`: the process that runs the scheduler
+- `apps/web`: coming in step 5

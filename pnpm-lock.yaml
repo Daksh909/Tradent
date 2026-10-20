@@ -21,6 +21,21 @@ importers:
         specifier: ^5.0.5
         version: 5.0.5(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(vite@8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(tsx@4.23.15))
 
+  apps/worker:
+    dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.135.0
+        version: 0.135.0
+      '@tradent/agent':
+        specifier: workspace:*
+        version: link:../../packages/agent
+      '@tradent/broker':
+        specifier: workspace:*
+        version: link:../../packages/broker
+      '@tradent/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+
   packages/agent:
     dependencies:
       '@anthropic-ai/sdk':

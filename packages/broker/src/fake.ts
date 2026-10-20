@@ -13,6 +13,7 @@ import type {
   OrderRequest,
   Position,
   Quote,
+  TradingDay,
 } from "./types";
 
 interface FakeAccount {
@@ -27,6 +28,8 @@ export class FakeBroker implements BrokerAdapter {
   private accounts = new Map<string, FakeAccount>();
   private prices = new Map<string, number>();
   marketOpen = true;
+  /** Weekdays listed here are market holidays. */
+  holidays = new Set<string>();
 
   constructor(private readonly now: () => Date = () => new Date()) {}
 
@@ -136,6 +139,15 @@ export class FakeBroker implements BrokerAdapter {
   async getClock(): Promise<MarketClock> {
     const t = this.now().toISOString();
     return { timestamp: t, isOpen: this.marketOpen, nextOpen: t, nextClose: t };
+  }
+
+  async getCalendar(start: string, end: string): Promise<TradingDay[]> {
+    const days: TradingDay[] = [];
+    for (let d = new Date(`${start}T12:00:00Z`); d <= new Date(`${end}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + 1)) {
+      const date = d.toISOString().slice(0, 10);
+      if (d.getUTCDay() !== 0 && d.getUTCDay() !== 6 && !this.holidays.has(date)) days.push({ date, open: "09:30", close: "16:00" });
+    }
+    return days;
   }
 
   async getLatestQuotes(symbols: string[]): Promise<Quote[]> {

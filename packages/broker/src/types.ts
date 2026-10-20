@@ -68,6 +68,13 @@ export interface MarketClock {
   nextClose: string;
 }
 
+/** One trading day; open and close are New York local times, "HH:MM". */
+export interface TradingDay {
+  date: string;
+  open: string;
+  close: string;
+}
+
 export interface Quote {
   symbol: string;
   bid: number;
@@ -120,6 +127,8 @@ export interface BrokerAdapter {
   /** Fills as reported by the broker; the only source of fills (CLAUDE.md hard rule 4). */
   getFills(accountId: string, opts?: { after?: string }): Promise<BrokerFill[]>;
   getClock(): Promise<MarketClock>;
+  /** Trading days between two dates (YYYY-MM-DD, inclusive). */
+  getCalendar(start: string, end: string): Promise<TradingDay[]>;
   getLatestQuotes(symbols: string[]): Promise<Quote[]>;
   getBars(symbol: string, timeframe: BarTimeframe, opts: { start: string; end?: string; delayed?: boolean }): Promise<BarSeries>;
   getOptionChain(underlying: string): Promise<OptionChain>;

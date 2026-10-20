@@ -32,3 +32,12 @@ describe("FakeBroker", () => {
     expect(await b.getOrders(id, { status: "open" })).toHaveLength(0);
   });
 });
+
+describe("FakeBroker calendar", () => {
+  it("lists weekdays that are not holidays", async () => {
+    const b = new FakeBroker();
+    b.holidays.add("2026-11-26");
+    const days = await b.getCalendar("2026-11-23", "2026-11-29");
+    expect(days.map((d) => d.date)).toEqual(["2026-11-23", "2026-11-24", "2026-11-25", "2026-11-27"]);
+  });
+});
