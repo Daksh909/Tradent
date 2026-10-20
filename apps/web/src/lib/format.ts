@@ -29,3 +29,6 @@ export function cadenceLabel(minutes: number): string {
 
 export const formatDateTime = (d: Date | string) =>
   new Date(d).toLocaleString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) + " ET";
+
+/** AI cost: four decimals under a dollar, since one decision costs cents. */
+export const formatCost = (n: number) => (n < 1 ? `$${n.toFixed(4)}` : formatUsd(n));

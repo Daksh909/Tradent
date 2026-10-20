@@ -5,3 +5,5 @@ export * from "./runner";
 export * from "./scheduler";
 export * from "./library";
 export * from "./testing";
+export * from "./forward-tests";
+export * from "./trading";

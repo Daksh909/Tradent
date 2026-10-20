@@ -3,6 +3,7 @@
 import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { setKillSwitch } from "@tradent/agent";
 import { eq } from "@tradent/db";
 import * as s from "@tradent/db";
 import { auth } from "@/lib/auth";
@@ -28,5 +29,14 @@ export async function setDeveloper(enabled: boolean) {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
   await getDb().update(s.users).set({ isDeveloper: enabled, updatedAt: new Date() }).where(eq(s.users.id, user.id));
+  revalidatePath("/", "layout");
+}
+
+/** The kill switch: the agent's developer or an admin (CLAUDE.md hard rule 8). */
+export async function setAgentKilled(agentId: string, killed: boolean) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/sign-in");
+  if (!/^[0-9a-f-]{36}$/i.test(agentId)) throw new Error("Invalid agent id");
+  if (!(await setKillSwitch(getDb(), user, agentId, killed))) throw new Error("Only the agent's developer or an admin can do this");
   revalidatePath("/", "layout");
 }
