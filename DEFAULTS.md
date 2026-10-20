@@ -10,3 +10,7 @@ Gap-filling choices made during the build, not decisions from SPEC.md's Decision
 | Trust record tamper evidence | SHA-256 hash chain over canonical JSON, per agent version | `packages/core/src/hash.ts` |
 | ORM | Drizzle with postgres.js | `packages/db` |
 | Cadence unit | Minutes between decisions during market hours | `agent_versions.cadence_minutes` |
+| Sandbox account identity | Synthetic platform identity per paper account (no real person) | `packages/broker/src/alpaca.ts` |
+| Sandbox funding | Test ACH relationship plus an incoming transfer for the starting cash | `packages/broker/src/alpaca.ts` |
+| Order time in force | `day` | `packages/broker/src/alpaca.ts` |
+| Options data label | "Options indicative" (Alpaca's free options feed) | `packages/broker/src/types.ts` |
