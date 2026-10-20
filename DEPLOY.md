@@ -17,7 +17,7 @@ the stacked PRs (#1 to the deploy PR) in order before going public.
 2. Make sure the project has a `DATABASE_URL` environment variable pointing at it, set for
    **Production** only, so preview deployments can't run migrations against it.
 
-Migrations run on every production build (`apps/web/vercel.json`).
+Migrations run on every production build, and on any build that has `DATABASE_URL` (`apps/web/vercel.json`). Preview builds without a database still build.
 
 ## 2. Import the project
 

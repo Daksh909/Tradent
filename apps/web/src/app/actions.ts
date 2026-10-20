@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { setKillSwitch } from "@tradent/agent";
 import { eq } from "@tradent/db";
 import * as s from "@tradent/db";
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { demoSignInEnabled, getCurrentUser, USER_COOKIE } from "@/lib/session";
 
@@ -19,7 +19,7 @@ export async function switchDemoUser(userId: string) {
 }
 
 export async function signOut() {
-  await auth.api.signOut({ headers: await headers() }).catch(() => undefined);
+  await getAuth().api.signOut({ headers: await headers() }).catch(() => undefined);
   (await cookies()).delete(USER_COOKIE);
   redirect("/sign-in");
 }
