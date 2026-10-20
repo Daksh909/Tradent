@@ -28,9 +28,12 @@ export default async function globalSetup() {
     strategyVersionIds: [strategyVersion!.id],
   });
 
+  // A young forward test only its developer may see; the kill switch test uses it.
+  const young = await simulateForwardTest(db, { ownerId: developer!.id, name: `E2E Young ${tag}`, publicSummary: "Still testing.", instructions: secretPrompt, tradingDays: 5, roundTrips: 2 });
+
   writeFileSync(
     USERS_FILE,
-    JSON.stringify({ developer: developer!.id, investor: investor!.id, toggler: toggler!.id, listedAgent: listed.agentId, listedAgentName: `E2E Momentum ${tag}`, strategyName: strategy!.name, secretPrompt }),
+    JSON.stringify({ developer: developer!.id, investor: investor!.id, toggler: toggler!.id, listedAgent: listed.agentId, listedAgentName: `E2E Momentum ${tag}`, strategyName: strategy!.name, secretPrompt, youngVersion: young.versionId, youngName: `E2E Young ${tag}`, listedVersion: listed.versionId }),
   );
   await client.end();
 }

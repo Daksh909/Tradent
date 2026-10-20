@@ -41,3 +41,13 @@ Gap-filling choices made during the build, not decisions from SPEC.md's Decision
 | Decision reasoning on Agent detail | Each trade shows its decision time and the model's reasoning, which the spec's Trading page also shows to everyone; prompts never | `apps/web/src/app/(app)/agents/[agentId]/page.tsx` |
 | Follow and Fork buttons | Shown but disabled until paper-follow (step 7) and Studio (step 6c) exist; Fork only for developers | `apps/web/src/app/(app)/agents/[agentId]/page.tsx` |
 | Lineage view | A simple parents-to-version diagram; a React Flow graph can replace it | `apps/web/src/app/(app)/agents/[agentId]/page.tsx` |
+| Forward tests status | "Testing", "Listed" (with "young record" under 90 days) or "Stopped" when the kill switch is on | `apps/web/src/components/test-status.tsx` |
+| Kill switch place | On each forward test's page; it stops the whole agent (all its versions) | `apps/web/src/app/(app)/forward-tests/[versionId]/page.tsx` |
+| Decision log shown | The newest 200 decisions on a forward test, the newest 50 on Trading | `packages/agent/src/forward-tests.ts`, `packages/agent/src/trading.ts` |
+| Who sees AI cost | Only the agent's developer; investors see reasoning, proposed orders and the guardrail result | `packages/agent/src/trading.ts` |
+| Trading agent choice | Your own forward tests, then Library-listed agents; the first one opens by default | `packages/agent/src/trading.ts` |
+| Watchlist | The agent's allowed symbols plus every stock it has traded (up to 10), SPY when there are none; change is against the previous daily close | `packages/agent/src/trading.ts`, `apps/web/src/app/(app)/trading/page.tsx` |
+| Chart intervals | 1m (2 days), 5m (5 days), 15m (10 days), 1h (30 days, the default), 1D (1 year), IEX real-time bars | `apps/web/src/app/(app)/trading/page.tsx` |
+| Fill markers | At the fill price, on the bar the fill falls in; fills older than the chart's range aren't marked | `apps/web/src/app/(app)/trading/page.tsx` |
+| Open orders | Our order rows whose broker status isn't filled, canceled, expired, rejected, replaced or done for day | `apps/web/src/app/(app)/trading/page.tsx` |
+| Broker errors on Trading | The page says the part is unavailable; the broker's error goes to the server log only | `apps/web/src/app/(app)/trading/page.tsx` |

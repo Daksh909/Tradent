@@ -63,7 +63,7 @@ const publicVersionColumns = {
   startingCash: s.paperAccounts.startingCash,
 };
 
-async function withRecords(db: Db, rows: (Omit<PublicVersion, keyof ListingStatus | "tradingDays" | "trades" | "equity" | "totalReturn" | "maxDrawdown" | "instruments" | "startingCash"> & { startingCash: string })[]): Promise<PublicVersion[]> {
+export async function withRecords(db: Db, rows: (Omit<PublicVersion, keyof ListingStatus | "tradingDays" | "trades" | "equity" | "totalReturn" | "maxDrawdown" | "instruments" | "startingCash"> & { startingCash: string })[]): Promise<PublicVersion[]> {
   if (rows.length === 0) return [];
   const ids = rows.map((r) => r.versionId);
 
@@ -113,7 +113,7 @@ async function withRecords(db: Db, rows: (Omit<PublicVersion, keyof ListingStatu
   });
 }
 
-function publicVersions(db: Db) {
+export function publicVersions(db: Db) {
   return db
     .select(publicVersionColumns)
     .from(s.agentVersions)
