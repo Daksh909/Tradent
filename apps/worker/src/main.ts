@@ -1,7 +1,7 @@
 // The worker: every minute, run due agent decisions during market hours, and
 // write DailyMetrics once after each close. Paper only (Alpaca Broker API sandbox).
 import Anthropic from "@anthropic-ai/sdk";
-import { metricsDueDate, tick, writeDailyMetrics } from "@tradent/agent";
+import { metricsDueDate, tick, updateListingStatus, writeDailyMetrics } from "@tradent/agent";
 import { alpacaSandboxFromEnv } from "@tradent/broker";
 import { createDb } from "@tradent/db";
 
@@ -28,6 +28,7 @@ async function wake() {
       const date = await metricsDueDate(broker, new Date());
       if (date && date !== lastMetricsDate) {
         log("daily_metrics", { date, written: await writeDailyMetrics(db, broker, date) });
+        log("listing", { newlyListed: await updateListingStatus(db) });
         lastMetricsDate = date;
       }
     }
