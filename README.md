@@ -19,4 +19,5 @@ pnpm test
 
 - `packages/core`: shared constants, risk limits, trust-record hash chain
 - `packages/db`: Postgres schema (Drizzle), migrations, seed
+- `packages/broker`: `BrokerAdapter` interface, Alpaca Broker API sandbox implementation, in-memory `FakeBroker`
 - `apps/`: web app and worker (coming in later steps)
