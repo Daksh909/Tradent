@@ -20,7 +20,7 @@ import { navFor } from "@/lib/nav";
 import type { CurrentUser } from "@/lib/session";
 import { NavUser } from "./nav-user";
 
-export function AppSidebar({ isDeveloper, user, demoUsers }: { isDeveloper: boolean; user: CurrentUser | null; demoUsers: CurrentUser[] }) {
+export function AppSidebar({ isDeveloper, user, demoUsers, demoMode }: { isDeveloper: boolean; user: CurrentUser | null; demoUsers: CurrentUser[]; demoMode: boolean }) {
   const nav = navFor(isDeveloper);
   const pathname = usePathname();
   return (
@@ -61,7 +61,7 @@ export function AppSidebar({ isDeveloper, user, demoUsers }: { isDeveloper: bool
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter>{user && <NavUser user={user} demoUsers={demoUsers} />}</SidebarFooter>
+      <SidebarFooter>{user && <NavUser user={user} demoUsers={demoUsers} demoMode={demoMode} />}</SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

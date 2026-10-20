@@ -19,13 +19,15 @@ test("every page shows the Paper badge and the market status", async ({ page, co
   }
 });
 
-test("the home page opens the Library", async ({ page }) => {
+test("the home page opens the Library once signed in", async ({ page, context }) => {
+  await signInAs(context, users().developer);
   await page.goto("/");
   await expect(page).toHaveURL(/\/library$/);
   await expect(page.getByRole("heading", { name: "Library" })).toBeVisible();
 });
 
-test("market status says it is unavailable without broker keys", async ({ page }) => {
+test("market status says it is unavailable without broker keys", async ({ page, context }) => {
+  await signInAs(context, users().developer);
   await page.goto("/library");
   await expect(page.getByTestId("market-status")).toHaveAttribute("data-status", "unavailable");
 });
@@ -63,6 +65,6 @@ test("the command palette opens with Ctrl+K and navigates", async ({ page, conte
 });
 
 test("the dark theme is the default", async ({ page }) => {
-  await page.goto("/library");
+  await page.goto("/sign-in");
   await expect(page.locator("html")).toHaveClass(/dark/);
 });

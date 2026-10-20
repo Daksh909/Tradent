@@ -26,7 +26,10 @@ Gap-filling choices made during the build, not decisions from SPEC.md's Decision
 | DailyMetrics time | 5 minutes after the close on trading days (broker calendar), from the broker's account equity | `packages/agent/src/scheduler.ts` |
 | Killed agents' metrics | Still recorded daily, since they may still hold positions | `packages/agent/src/scheduler.ts` |
 | Trade count | Fills dated by their New York trading day | `packages/agent/src/scheduler.ts` |
-| Sign-in until Auth.js ships | Demo user switcher in the user menu, kept in a cookie (Decision 17 picks Google and GitHub) | `apps/web/src/lib/session.ts` |
+| Sign-in library | Better Auth, since Auth.js's own README recommends it for new projects (Decision 17 picks Google and GitHub) | `apps/web/src/lib/auth.ts` |
+| Demo sign-in | Pick any user without a password, only when `TRADENT_DEMO_SIGN_IN=true` (local development and tests) | `apps/web/src/lib/session.ts` |
+| New accounts | Investors; anyone can turn on developer tools in Settings | `apps/web/src/lib/auth.ts`, `apps/web/src/app/actions.ts` |
+| Account linking | Better Auth's default (on): Google and GitHub sign-ins with the same provider-verified email share one account | `apps/web/src/lib/auth.ts` |
 | Market status refresh | Every 60 seconds from the broker's market clock; shows "unavailable" without Alpaca keys | `apps/web/src/components/market-status.tsx` |
 | Fonts | System font stack (no web font download) | `apps/web/src/app/globals.css` |
 | Navigation | Discover (Library), Build (Studio, Forward tests), Trade (Trading, Portfolio), Account (Spend, Settings); Build and Spend shown to developers only | `apps/web/src/lib/nav.ts` |

@@ -19,7 +19,7 @@ To run agents, copy `.env.example` to `.env`, fill in Anthropic and Alpaca Broke
 
 ```
 pnpm worker       # runs due agent decisions every minute in market hours, DailyMetrics after the close
-pnpm web          # the web app at http://localhost:3000
+pnpm web          # the web app at http://localhost:3000 (set TRADENT_DEMO_SIGN_IN=true to sign in without OAuth apps)
 ```
 
 Browser tests for the web app: `pnpm --filter @tradent/web build && pnpm --filter @tradent/web e2e` (set `PLAYWRIGHT_CHROMIUM_PATH` to use an installed Chromium).
