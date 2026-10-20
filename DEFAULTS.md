@@ -65,3 +65,7 @@ Gap-filling choices made during the build, not decisions from SPEC.md's Decision
 | Canvas | Built from the draft (inputs, then AI model, risk limits, broker); blocks are edited in the settings pane rather than wired by hand | `apps/web/src/components/studio/studio-canvas.tsx` |
 | Spend breakdown | Forward-test decisions and smoke tests from their own records; the Studio chat builder is the rest of the ledger total | `packages/agent/src/spend.ts` |
 | Spend month | Calendar month in UTC, as the spend ledger keys it | `packages/agent/src/spend.ts` |
+| Follow amount | $1,000 to $1,000,000 of virtual money, $10,000 suggested | `packages/agent/src/follow.ts` |
+| Follow scale | Virtual amount divided by the agent account's equity when the follow starts: the broker's live equity when readable, otherwise the last daily close | `packages/agent/src/follow.ts` |
+| Who can follow | Any signed-in account, developers included; only Library-listed, not-stopped versions; one active follow per version | `apps/web/src/app/(app)/portfolio/actions.ts` |
+| Follow value | Updated at each daily close; stopping a follow freezes its value at the account's equity then | `packages/agent/src/follow.ts` |

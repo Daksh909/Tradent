@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
-import { getAgentDetail } from "@tradent/agent";
+import { activeFollow, DEFAULT_FOLLOW_USD, getAgentDetail, MAX_FOLLOW_USD, MIN_FOLLOW_USD } from "@tradent/agent";
 import { EquityChart } from "@/components/equity-chart";
+import { FollowButton } from "@/components/follow-button";
 import { PageHeader } from "@/components/page-header";
 import { RecordBadges } from "@/components/record-badges";
 import { Badge } from "@/components/ui/badge";
@@ -50,10 +51,16 @@ export default async function Page(p: Params) {
     <>
       <PageHeader title={detail.name} description={`by ${detail.ownerName}`}>
         <div className="flex gap-2">
-          {/* DEFAULT: Follow arrives with paper-follow (build step 7). */}
-          <Button disabled title="Paper-follow arrives in a later build step" data-testid="follow-button">
-            Follow on paper
-          </Button>
+          {user && v?.listed && !detail.killed && (
+            <FollowButton
+              versionId={v.versionId}
+              agentName={detail.name}
+              following={await activeFollow(getDb(), user.id, v.versionId)}
+              min={MIN_FOLLOW_USD}
+              max={MAX_FOLLOW_USD}
+              suggested={DEFAULT_FOLLOW_USD}
+            />
+          )}
           {user?.isDeveloper && v?.listed && (
             <Button asChild variant="outline" data-testid="fork-button">
               <Link href={`/studio?fork=${v.versionId}`}>Fork in Studio</Link>

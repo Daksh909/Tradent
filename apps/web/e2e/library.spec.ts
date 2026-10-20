@@ -42,7 +42,7 @@ test("Agent detail shows the record, chart with TradingView credit, and trades w
   await expect(page.getByTestId("trades-table").locator("tbody tr")).toHaveCount(20);
   await page.getByTestId("trades-table").locator("summary").first().click();
   await expect(page.getByTestId("trades-table")).toContainText("(simulated record)");
-  await expect(page.getByTestId("follow-button")).toBeDisabled();
+  await expect(page.getByTestId("follow-button")).toBeEnabled();
 });
 
 test("investor pages never contain the agent's prompt", async ({ page, request }) => {
