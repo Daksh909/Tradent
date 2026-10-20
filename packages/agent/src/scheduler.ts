@@ -4,6 +4,7 @@ import { and, eq, gte, inArray, isNotNull, lt, sql } from "@tradent/db";
 import * as s from "@tradent/db";
 import type { Db } from "@tradent/db";
 import type { BrokerAdapter } from "@tradent/broker";
+import { updateListingStatus } from "./library";
 import { runDecision, type RunResult, type RunnerDeps } from "./runner";
 
 const ACTIVE = ["forward_testing", "listed"] as const;
@@ -119,6 +120,9 @@ export async function writeDailyMetrics(db: Db, broker: BrokerAdapter, date: str
 
   let written = 0;
   for (const v of versions) {
+    // Already written: skip before asking the broker, so repeated passes stay cheap.
+    const [done] = await db.select({ date: s.dailyMetrics.date }).from(s.dailyMetrics).where(and(eq(s.dailyMetrics.agentVersionId, v.versionId), eq(s.dailyMetrics.date, date)));
+    if (done) continue;
     const history = await db
       .select({ equity: s.dailyMetrics.equity, maxDrawdown: s.dailyMetrics.maxDrawdown })
       .from(s.dailyMetrics)
@@ -152,4 +156,41 @@ export async function writeDailyMetrics(db: Db, broker: BrokerAdapter, date: str
     written += inserted.length;
   }
   return written;
+}
+
+// DEFAULT: a pass holds the scheduler lease for at most 5 minutes, so a crashed pass can't block the next ones for long.
+const LEASE_SECONDS = 300;
+
+export type PassEvent = { event: string } & Record<string, unknown>;
+
+/**
+ * One scheduler pass: due decisions while the market is open, otherwise the
+ * day's DailyMetrics and listing updates once the close has settled. Safe to
+ * repeat; overlapping passes are skipped. The worker and the cron endpoint both call this.
+ */
+export async function schedulerPass(deps: RunnerDeps): Promise<PassEvent[]> {
+  const now = (deps.now ?? (() => new Date()))();
+  const until = new Date(now.getTime() + LEASE_SECONDS * 1000);
+  const [lease] = await deps.db
+    .insert(s.schedulerLeases)
+    .values({ name: "scheduler", heldUntil: until })
+    .onConflictDoUpdate({ target: s.schedulerLeases.name, set: { heldUntil: until }, where: lt(s.schedulerLeases.heldUntil, now) })
+    .returning({ heldUntil: s.schedulerLeases.heldUntil });
+  if (!lease) return [{ event: "skipped", reason: "another pass is running" }];
+
+  const events: PassEvent[] = [];
+  try {
+    const { marketOpen, results } = await tick(deps);
+    for (const r of results) events.push({ event: "decision", versionId: r.versionId, ...r.result });
+    if (!marketOpen) {
+      const date = await metricsDueDate(deps.broker, now);
+      if (date) {
+        events.push({ event: "daily_metrics", date, written: await writeDailyMetrics(deps.db, deps.broker, date) });
+        events.push({ event: "listing", newlyListed: await updateListingStatus(deps.db) });
+      }
+    }
+  } finally {
+    await deps.db.delete(s.schedulerLeases).where(eq(s.schedulerLeases.name, "scheduler"));
+  }
+  return events;
 }

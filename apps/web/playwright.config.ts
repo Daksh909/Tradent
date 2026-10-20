@@ -27,6 +27,7 @@ export default defineConfig({
       GITHUB_CLIENT_SECRET: "e2e-github-secret",
       GOOGLE_CLIENT_ID: "e2e-google-client",
       GOOGLE_CLIENT_SECRET: "e2e-google-secret",
+      CRON_SECRET: "e2e-cron-secret-0123456789",
     },
   },
 });

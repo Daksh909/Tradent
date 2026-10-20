@@ -316,3 +316,9 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
 export const accountsRelations = relations(accounts, ({ one }) => ({
   user: one(users, { fields: [accounts.userId], references: [users.id] }),
 }));
+
+// One scheduler pass at a time, across worker processes and serverless calls.
+export const schedulerLeases = pgTable("scheduler_leases", {
+  name: text("name").primaryKey(),
+  heldUntil: timestamp("held_until", { withTimezone: true }).notNull(),
+});

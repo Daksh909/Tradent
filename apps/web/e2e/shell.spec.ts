@@ -35,12 +35,12 @@ test("market status says it is unavailable without broker keys", async ({ page, 
 test("developers see the build pages and investors don't", async ({ page, context }) => {
   await signInAs(context, users().developer);
   await page.goto("/library");
-  await expect(page.getByRole("link", { name: "Studio" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Studio", exact: true })).toBeVisible();
 
   await signInAs(context, users().investor);
   await page.goto("/library");
   await expect(page.getByRole("link", { name: "Portfolio" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Studio" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Studio", exact: true })).toHaveCount(0);
   await page.goto("/studio");
   await expect(page.getByText("This page is for developers.")).toBeVisible();
 });
@@ -52,7 +52,7 @@ test("the demo user switcher changes who is signed in", async ({ page, context }
   await page.getByText("Switch demo user").click();
   await page.getByRole("menuitem", { name: /E2E Investor/ }).first().click();
   await expect(page.getByTestId("user-menu")).toContainText("E2E Investor");
-  await expect(page.getByRole("link", { name: "Studio" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Studio", exact: true })).toHaveCount(0);
 });
 
 test("the command palette opens with Ctrl+K and navigates", async ({ page, context }) => {

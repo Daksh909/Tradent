@@ -5,7 +5,7 @@ import { FakeBroker } from "@tradent/broker";
 import { createDb, eq, inArray } from "@tradent/db";
 import * as s from "@tradent/db";
 import type { MessagesClient } from "./runner";
-import { dueVersions, metricsDueDate, newYorkTime, tick, writeDailyMetrics } from "./scheduler";
+import { dueVersions, metricsDueDate, newYorkTime, schedulerPass, tick, writeDailyMetrics } from "./scheduler";
 
 const url = process.env.DATABASE_URL;
 const NOW = new Date("2026-10-20T15:00:00Z"); // Tuesday, 11:00 in New York
@@ -133,5 +133,30 @@ describe.skipIf(!url)("scheduler", () => {
       ["2026-10-20", 99_000, -0.01, 0.01, 1],
       ["2026-10-21", 101_000, Number((101_000 / 99_000 - 1).toFixed(8)), 0.01, 0],
     ]);
+  });
+
+  it("one scheduler pass at a time: decisions while open, metrics once after the close", async () => {
+    let now = NOW;
+    const broker = new FakeBroker(() => now);
+    const { versionId } = await agentVersion(broker);
+    const model = idleModel();
+    const deps = { db, broker, anthropic: model.client, now: () => now };
+
+    // A pass that's already running blocks this one.
+    await db.insert(s.schedulerLeases).values({ name: "scheduler", heldUntil: minutes(5) });
+    expect(await schedulerPass(deps)).toEqual([{ event: "skipped", reason: "another pass is running" }]);
+    // A lease left behind by a crashed pass expires.
+    await db.update(s.schedulerLeases).set({ heldUntil: minutes(-1) });
+    expect((await schedulerPass(deps)).filter((e) => e.event === "decision").map((e) => e.versionId)).toContain(versionId);
+    expect(await db.select().from(s.schedulerLeases)).toHaveLength(0);
+
+    now = new Date("2026-10-20T20:10:00Z");
+    broker.marketOpen = false;
+    const after = await schedulerPass(deps);
+    expect(after.find((e) => e.event === "daily_metrics")).toMatchObject({ date: "2026-10-20" });
+    expect(await db.select().from(s.dailyMetrics).where(eq(s.dailyMetrics.agentVersionId, versionId))).toHaveLength(1);
+    // Repeating it later writes nothing new.
+    now = new Date("2026-10-20T20:15:00Z");
+    expect((await schedulerPass(deps)).find((e) => e.event === "daily_metrics")).toMatchObject({ written: 0 });
   });
 });

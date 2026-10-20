@@ -1,0 +1,28 @@
+# Runs one scheduler pass on the deployed site every 5 minutes on weekdays (Decision 20).
+# The site itself checks the broker's market clock, so runs outside market hours do nothing
+# except write DailyMetrics after the close. Needs the repo secrets TRADENT_URL and CRON_SECRET;
+# until both are set, each run just says so and passes.
+name: Scheduler
+on:
+  schedule:
+    # 13:00 to 21:59 UTC covers the US session and the after-close metrics in both EDT and EST.
+    - cron: "*/5 13-21 * * 1-5"
+  workflow_dispatch:
+concurrency:
+  group: scheduler
+  cancel-in-progress: false
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Call the scheduler endpoint
+        env:
+          TRADENT_URL: ${{ secrets.TRADENT_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$TRADENT_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "TRADENT_URL or CRON_SECRET isn't set yet; nothing to do."
+            exit 0
+          fi
+          curl -fsS --max-time 120 -H "Authorization: Bearer $CRON_SECRET" "${TRADENT_URL%/}/api/cron/tick"
