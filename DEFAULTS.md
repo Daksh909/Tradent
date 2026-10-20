@@ -72,3 +72,7 @@ Gap-filling choices made during the build, not decisions from SPEC.md's Decision
 | Webhook secret | 24 random bytes in the webhook URL path (TradingView lets users set only the URL and the message); only its SHA-256 hash is stored; shown once; one webhook per agent, and replacing the secret stops the old URL | `packages/agent/src/webhooks.ts` |
 | Alert limits | Bodies up to 4 KB; at most 50 alerts waiting per agent (more get HTTP 429); JSON bodies stored as JSON, anything else as `{ text }` | `packages/agent/src/webhooks.ts` |
 | Webhook URL host | `BETTER_AUTH_URL`, else the request's host | `apps/web/src/app/(app)/spend/actions.ts` |
+| Scheduler lease | One scheduler pass at a time across processes; a pass holds the lease for up to 5 minutes | `packages/agent/src/scheduler.ts` |
+| Cron endpoint time limit | 60 seconds per pass on Vercel | `apps/web/src/app/api/cron/tick/route.ts` |
+| Scheduler workflow hours | Every 5 minutes, 13:00 to 21:59 UTC on weekdays (covers the session and the after-close metrics in EDT and EST) | `.github/workflows/scheduler.yml` |
+| Migrations on deploy | Every production build runs `pnpm db:migrate` before building | `apps/web/vercel.json` |

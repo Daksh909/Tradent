@@ -281,6 +281,7 @@ All decided by Daksh on 2026-10-20. Where anything above disagrees, this list wi
 | 17 | How people sign in | Google and GitHub | Built with Better Auth (open source; Auth.js's own README now recommends it for new projects). Accounts live in our Postgres; Daksh creates one Google and one GitHub OAuth app. A demo sign-in exists for local development and tests only |
 | 18 | What counts toward the $10 AI cap | Everything | Forward-test decisions, Studio chat builder messages and smoke tests all count, so each developer's AI bill stays capped at $10 a month |
 | 19 | Following an agent that already holds positions | Copy current positions | The follower starts with a scaled copy of the agent's holdings, so their return tracks the agent's record exactly from the day they follow |
+| 20 | What runs the decision timer on the hosted site | GitHub Actions | A scheduled workflow calls the site's scheduler endpoint every 5 minutes for free; Vercel's free plan only runs cron jobs daily |
 
 ## Still open outside the code (Daksh's actions, none blocks the build)
 

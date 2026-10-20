@@ -1,7 +1,7 @@
 // The worker: every minute, run due agent decisions during market hours, and
 // write DailyMetrics once after each close. Paper only (Alpaca Broker API sandbox).
 import Anthropic from "@anthropic-ai/sdk";
-import { metricsDueDate, tick, updateListingStatus, writeDailyMetrics } from "@tradent/agent";
+import { schedulerPass } from "@tradent/agent";
 import { alpacaSandboxFromEnv } from "@tradent/broker";
 import { createDb } from "@tradent/db";
 
@@ -15,23 +15,13 @@ const deps = { db, broker, anthropic };
 
 const log = (event: string, data: Record<string, unknown> = {}) => console.log(JSON.stringify({ at: new Date().toISOString(), event, ...data }));
 
-let lastMetricsDate: string | null = null;
 let running = false;
 
 async function wake() {
   if (running) return; // A slow tick never overlaps the next one.
   running = true;
   try {
-    const { marketOpen, results } = await tick(deps);
-    for (const r of results) log("decision", { versionId: r.versionId, ...r.result });
-    if (!marketOpen) {
-      const date = await metricsDueDate(broker, new Date());
-      if (date && date !== lastMetricsDate) {
-        log("daily_metrics", { date, written: await writeDailyMetrics(db, broker, date) });
-        log("listing", { newlyListed: await updateListingStatus(db) });
-        lastMetricsDate = date;
-      }
-    }
+    for (const { event, ...data } of await schedulerPass(deps)) log(event, data);
   } catch (e) {
     log("tick_failed", { message: (e as Error).message });
   } finally {
