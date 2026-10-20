@@ -50,13 +50,13 @@ export default async function Page(p: Params) {
     <>
       <PageHeader title={detail.name} description={`by ${detail.ownerName}`}>
         <div className="flex gap-2">
-          {/* DEFAULT: Follow arrives with paper-follow (build step 7) and Fork with Studio (step 6c). */}
+          {/* DEFAULT: Follow arrives with paper-follow (build step 7). */}
           <Button disabled title="Paper-follow arrives in a later build step" data-testid="follow-button">
             Follow on paper
           </Button>
-          {user?.isDeveloper && (
-            <Button variant="outline" disabled title="Forking opens in Studio, coming in a later build step">
-              Fork
+          {user?.isDeveloper && v?.listed && (
+            <Button asChild variant="outline" data-testid="fork-button">
+              <Link href={`/studio?fork=${v.versionId}`}>Fork in Studio</Link>
             </Button>
           )}
         </div>

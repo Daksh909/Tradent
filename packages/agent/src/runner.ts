@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import type Anthropic from "@anthropic-ai/sdk";
 import { and, eq, isNull, sql } from "@tradent/db";
 import { MONTHLY_AI_SPEND_CAP_USD, type AgentModel, type RiskLimits } from "@tradent/core";
-import type { BrokerAdapter, Quote } from "@tradent/broker";
+import type { AccountSummary, BrokerAdapter, Quote } from "@tradent/broker";
 import * as s from "@tradent/db";
 import type { Db } from "@tradent/db";
 import { appendDecision } from "./decision-log";
@@ -31,7 +31,10 @@ const MAX_TURNS = 6;
 // DEFAULT: effort for trading decisions.
 const EFFORT = "medium" as const;
 
-const PROPOSE_TOOL = "propose_orders";
+export const PROPOSE_TOOL = "propose_orders";
+
+/** Read-only tools a developer can give an agent; propose_orders is always on. */
+export const DATA_TOOLS = ["get_quotes", "get_bars", "get_option_chain", "get_recent_fills"] as const;
 
 const TOOLS: Anthropic.Beta.BetaTool[] = [
   {
@@ -122,7 +125,7 @@ export async function monthlySpend(db: Db, developerId: string, now: Date): Prom
   return Number(row?.dollars ?? 0);
 }
 
-async function addSpend(db: Db, developerId: string, now: Date, dollars: number) {
+export async function addSpend(db: Db, developerId: string, now: Date, dollars: number) {
   await db
     .insert(s.spendLedger)
     .values({ developerId, month: monthStart(now), dollarsSpent: dollars.toFixed(6) })
@@ -158,96 +161,25 @@ export async function runDecision(deps: RunnerDeps, agentVersionId: string): Pro
   const summary = await broker.getAccount(brokerAccountId);
   if (dailyLossHit(summary, riskLimits)) return { status: "skipped", reason: "daily_loss_stop" };
 
-  const positions = await broker.getPositions(brokerAccountId);
-  const watch = [...new Set([...riskLimits.allowedSymbols, ...positions.filter((p) => p.instrument === "equity").map((p) => p.symbol)])];
-  const quotes = watch.length ? await broker.getLatestQuotes(watch) : [];
   const alerts = await db
     .select({ id: s.signalAlerts.id, payload: s.signalAlerts.payload, receivedAt: s.signalAlerts.receivedAt })
     .from(s.signalAlerts)
     .innerJoin(s.signalSources, eq(s.signalAlerts.signalSourceId, s.signalSources.id))
     .where(and(eq(s.signalSources.agentId, version.agentId), isNull(s.signalAlerts.consumedByDecisionId)));
 
-  const inputsSnapshot = {
-    time: startedAt.toISOString(),
-    account: summary,
-    positions,
-    quotes,
-    tradingViewAlerts: alerts.map((a) => ({ payload: a.payload, receivedAt: a.receivedAt.toISOString() })),
+  // Steps 2-4: the model decides, then guardrails check its orders.
+  const { inputsSnapshot, promptHash, servedBy, output, toolCalls, proposedOrders, outcome, inputTokens, outputTokens, costUsd } = await decide(anthropic, {
+    model: version.model as AgentModel,
+    instructions: version.instructions,
     riskLimits,
-  };
-
-  // Step 2-3: the model decides, with read-only tools and one typed order tool.
-  const model = MODEL_IDS[version.model as AgentModel];
-  const system = `${PLATFORM_SYSTEM}\n\n${version.instructions}`;
-  const promptHash = createHash("sha256").update(JSON.stringify({ system, tools: TOOLS })).digest("hex");
-  const messages: Anthropic.Beta.BetaMessageParam[] = [
-    { role: "user", content: `Account snapshot:\n${JSON.stringify(inputsSnapshot, null, 2)}` },
-  ];
-  const toolCalls: { name: string; input: unknown; result: unknown }[] = [];
-  let proposal: ProposalInput | null = null;
-  let inputTokens = 0;
-  let outputTokens = 0;
-  let costUsd = 0;
-  let servedBy = model;
-  let stopReason: string | null = null;
-  let finalText = "";
-
-  for (let turn = 0; turn < MAX_TURNS && !proposal; turn++) {
-    const res = await anthropic.beta.messages.create({
-      model,
-      max_tokens: 16000,
-      system,
-      tools: TOOLS,
-      messages,
-      output_config: { effort: EFFORT },
-      // Server-side fallback on a policy decline; Haiku has none.
-      ...(version.model === "haiku" ? {} : { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const }),
-    });
-    inputTokens += res.usage.input_tokens + (res.usage.cache_creation_input_tokens ?? 0) + (res.usage.cache_read_input_tokens ?? 0);
-    outputTokens += res.usage.output_tokens;
-    costUsd += responseCost(model, res.usage);
-    servedBy = res.model;
-    stopReason = res.stop_reason;
-    finalText = res.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("\n") || finalText;
-    if (res.stop_reason === "refusal") break;
-
-    messages.push({ role: "assistant", content: res.content });
-    const uses = res.content.filter((b): b is Anthropic.Beta.BetaToolUseBlock => b.type === "tool_use");
-    if (uses.length === 0) break;
-
-    const results: Anthropic.Beta.BetaToolResultBlockParam[] = [];
-    for (const use of uses) {
-      let result: unknown;
-      let isError = false;
-      try {
-        result = await runTool(broker, brokerAccountId, use, startedAt);
-        if (use.name === PROPOSE_TOOL) proposal = use.input as ProposalInput;
-      } catch (e) {
-        isError = true;
-        result = { error: (e as Error).message };
-      }
-      toolCalls.push({ name: use.name, input: use.input, result });
-      results.push({ type: "tool_result", tool_use_id: use.id, content: JSON.stringify(result), is_error: isError });
-    }
-    if (!proposal) messages.push({ role: "user", content: results });
-  }
-
-  // TypeScript can't see the assignment inside the loop's try block.
-  const final = proposal as ProposalInput | null;
-
-  // Step 4: guardrails, outside the model.
-  const proposedOrders: ProposedOrder[] = (final?.orders ?? []).map((o) => ({
-    symbol: o.symbol.toUpperCase(),
-    instrument: o.instrument,
-    side: o.side,
-    quantity: o.quantity,
-    type: o.type,
-    ...(o.limit_price === null ? {} : { limitPrice: o.limit_price }),
-  }));
-  const prices: Record<string, number> = Object.fromEntries(quotes.map((q) => [q.symbol, midPrice(q)]));
-  const missing = proposedOrders.filter((o) => o.instrument === "equity" && prices[o.symbol] === undefined).map((o) => o.symbol);
-  if (missing.length) for (const q of await broker.getLatestQuotes([...new Set(missing)])) prices[q.symbol] = midPrice(q);
-  const outcome = checkOrders({ orders: proposedOrders, riskLimits, account: summary, positions, prices, killed: version.agent.killed });
+    killed: version.agent.killed,
+    broker,
+    brokerAccountId,
+    account: summary,
+    alerts: alerts.map((a) => ({ payload: a.payload, receivedAt: a.receivedAt.toISOString() })),
+    tools: version.tools,
+    now: startedAt,
+  });
 
   // Step 6 comes first: the decision is written before any order is sent.
   const decision = await appendDecision(db, {
@@ -256,7 +188,7 @@ export async function runDecision(deps: RunnerDeps, agentVersionId: string): Pro
     inputsSnapshot,
     promptHash,
     modelId: servedBy,
-    output: { reasoning: final?.reasoning ?? null, text: finalText, stopReason, proposalMade: final !== null },
+    output,
     toolCalls,
     proposedOrders,
     guardrailResult: outcome.result,
@@ -298,6 +230,128 @@ export async function runDecision(deps: RunnerDeps, agentVersionId: string): Pro
   await syncFills(db, broker, account.id, brokerAccountId);
 
   return { status: "decided", decisionId: decision.id, guardrailResult: outcome.result, ordersSubmitted, costUsd };
+}
+
+export interface DecisionContext {
+  model: AgentModel;
+  instructions: string;
+  riskLimits: RiskLimits;
+  killed: boolean;
+  /** Market data and the account the tools read. */
+  broker: BrokerAdapter;
+  brokerAccountId: string;
+  account: AccountSummary;
+  alerts: { payload: unknown; receivedAt: string }[];
+  /** The version's tools; propose_orders is always offered. Empty means every tool. */
+  tools: string[];
+  now: Date;
+}
+
+/**
+ * The model's decision and the guardrail check, without writing or sending
+ * anything. runDecision logs and acts on it; the smoke test only shows it.
+ */
+export async function decide(anthropic: MessagesClient, ctx: DecisionContext) {
+  const { broker, brokerAccountId, riskLimits } = ctx;
+  const positions = await broker.getPositions(brokerAccountId);
+  const watch = [...new Set([...riskLimits.allowedSymbols, ...positions.filter((p) => p.instrument === "equity").map((p) => p.symbol)])];
+  const quotes = watch.length ? await broker.getLatestQuotes(watch) : [];
+
+  const inputsSnapshot = {
+    time: ctx.now.toISOString(),
+    account: ctx.account,
+    positions,
+    quotes,
+    tradingViewAlerts: ctx.alerts,
+    riskLimits,
+  };
+
+  const model = MODEL_IDS[ctx.model];
+  const system = `${PLATFORM_SYSTEM}\n\n${ctx.instructions}`;
+  const messages: Anthropic.Beta.BetaMessageParam[] = [
+    { role: "user", content: `Account snapshot:\n${JSON.stringify(inputsSnapshot, null, 2)}` },
+  ];
+  const tools = ctx.tools.length ? TOOLS.filter((t) => t.name === PROPOSE_TOOL || ctx.tools.includes(t.name)) : TOOLS;
+  const promptHash = createHash("sha256").update(JSON.stringify({ system, tools })).digest("hex");
+  const toolCalls: { name: string; input: unknown; result: unknown }[] = [];
+  let proposal: ProposalInput | null = null;
+  let inputTokens = 0;
+  let outputTokens = 0;
+  let costUsd = 0;
+  let servedBy = model;
+  let stopReason: string | null = null;
+  let finalText = "";
+
+  for (let turn = 0; turn < MAX_TURNS && !proposal; turn++) {
+    const res = await anthropic.beta.messages.create({
+      model,
+      max_tokens: 16000,
+      system,
+      tools,
+      messages,
+      output_config: { effort: EFFORT },
+      // Server-side fallback on a policy decline; Haiku has none.
+      ...(ctx.model === "haiku" ? {} : { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const }),
+    });
+    inputTokens += res.usage.input_tokens + (res.usage.cache_creation_input_tokens ?? 0) + (res.usage.cache_read_input_tokens ?? 0);
+    outputTokens += res.usage.output_tokens;
+    costUsd += responseCost(model, res.usage);
+    servedBy = res.model;
+    stopReason = res.stop_reason;
+    finalText = res.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("\n") || finalText;
+    if (res.stop_reason === "refusal") break;
+
+    messages.push({ role: "assistant", content: res.content });
+    const uses = res.content.filter((b): b is Anthropic.Beta.BetaToolUseBlock => b.type === "tool_use");
+    if (uses.length === 0) break;
+
+    const results: Anthropic.Beta.BetaToolResultBlockParam[] = [];
+    for (const use of uses) {
+      let result: unknown;
+      let isError = false;
+      try {
+        if (!tools.some((t) => t.name === use.name)) throw new Error(`Tool ${use.name} isn't enabled for this agent`);
+        result = await runTool(broker, brokerAccountId, use, ctx.now);
+        if (use.name === PROPOSE_TOOL) proposal = use.input as ProposalInput;
+      } catch (e) {
+        isError = true;
+        result = { error: (e as Error).message };
+      }
+      toolCalls.push({ name: use.name, input: use.input, result });
+      results.push({ type: "tool_result", tool_use_id: use.id, content: JSON.stringify(result), is_error: isError });
+    }
+    if (!proposal) messages.push({ role: "user", content: results });
+  }
+
+  // TypeScript can't see the assignment inside the loop's try block.
+  const final = proposal as ProposalInput | null;
+
+  // Guardrails, outside the model.
+  const proposedOrders: ProposedOrder[] = (final?.orders ?? []).map((o) => ({
+    symbol: o.symbol.toUpperCase(),
+    instrument: o.instrument,
+    side: o.side,
+    quantity: o.quantity,
+    type: o.type,
+    ...(o.limit_price === null ? {} : { limitPrice: o.limit_price }),
+  }));
+  const prices: Record<string, number> = Object.fromEntries(quotes.map((q) => [q.symbol, midPrice(q)]));
+  const missing = proposedOrders.filter((o) => o.instrument === "equity" && prices[o.symbol] === undefined).map((o) => o.symbol);
+  if (missing.length) for (const q of await broker.getLatestQuotes([...new Set(missing)])) prices[q.symbol] = midPrice(q);
+  const outcome = checkOrders({ orders: proposedOrders, riskLimits, account: ctx.account, positions, prices, killed: ctx.killed });
+
+  return {
+    inputsSnapshot,
+    promptHash,
+    servedBy,
+    output: { reasoning: final?.reasoning ?? null, text: finalText, stopReason, proposalMade: final !== null },
+    toolCalls,
+    proposedOrders,
+    outcome,
+    inputTokens,
+    outputTokens,
+    costUsd,
+  };
 }
 
 async function runTool(broker: BrokerAdapter, accountId: string, use: Anthropic.Beta.BetaToolUseBlock, now: Date): Promise<unknown> {

@@ -39,7 +39,7 @@ Gap-filling choices made during the build, not decisions from SPEC.md's Decision
 | Listing status | The worker marks a forward-testing agent listed after each DailyMetrics run once a version meets the rule | `apps/worker/src/main.ts` |
 | Agent detail version | The newest locked version unless one is picked | `packages/agent/src/library.ts` |
 | Decision reasoning on Agent detail | Each trade shows its decision time and the model's reasoning, which the spec's Trading page also shows to everyone; prompts never | `apps/web/src/app/(app)/agents/[agentId]/page.tsx` |
-| Follow and Fork buttons | Shown but disabled until paper-follow (step 7) and Studio (step 6c) exist; Fork only for developers | `apps/web/src/app/(app)/agents/[agentId]/page.tsx` |
+| Follow and Fork buttons | Follow shown but disabled until paper-follow (step 7); Fork in Studio shown to developers on listed versions | `apps/web/src/app/(app)/agents/[agentId]/page.tsx` |
 | Lineage view | A simple parents-to-version diagram; a React Flow graph can replace it | `apps/web/src/app/(app)/agents/[agentId]/page.tsx` |
 | Forward tests status | "Testing", "Listed" (with "young record" under 90 days) or "Stopped" when the kill switch is on | `apps/web/src/components/test-status.tsx` |
 | Kill switch place | On each forward test's page; it stops the whole agent (all its versions) | `apps/web/src/app/(app)/forward-tests/[versionId]/page.tsx` |
@@ -51,3 +51,15 @@ Gap-filling choices made during the build, not decisions from SPEC.md's Decision
 | Fill markers | At the fill price, on the bar the fill falls in; fills older than the chart's range aren't marked | `apps/web/src/app/(app)/trading/page.tsx` |
 | Open orders | Our order rows whose broker status isn't filled, canceled, expired, rejected, replaced or done for day | `apps/web/src/app/(app)/trading/page.tsx` |
 | Broker errors on Trading | The page says the part is unavailable; the broker's error goes to the server log only | `apps/web/src/app/(app)/trading/page.tsx` |
+| New Studio draft | Hourly, Sonnet 5.5, the platform's risk limits and every read-only data tool | `packages/agent/src/studio.ts` |
+| Cadence choices | Every 5, 15, 30 or 60 minutes, every 2 hours, once a session (390 min) or daily | `packages/agent/src/studio.ts` |
+| Saving | An unlocked version is saved in place; saving a locked version creates the next version with it as parent | `packages/agent/src/studio.ts` |
+| Agent name and summary | Editable until the agent's first forward test, then fixed | `packages/agent/src/studio.ts` |
+| Studio opens | Your newest version, unless a version or fork is picked | `apps/web/src/app/(app)/studio/page.tsx` |
+| Tools per version | The runner offers only the version's chosen data tools plus propose_orders; a version with no tools listed gets all of them | `packages/agent/src/runner.ts` |
+| Chat builder model | Sonnet 5.5; its cost counts toward the developer's $10 monthly cap | `packages/agent/src/builder.ts` |
+| Chat history | Kept only in the open page, not saved | `apps/web/src/components/studio/studio-workspace.tsx` |
+| Smoke test | One decision on the latest market data against a fresh $100,000 scratch account; no orders, no decision log; its cost counts toward the cap; runs any time, not only in market hours | `packages/agent/src/studio.ts` |
+| Combine | Adding blocks from a listed agent adds its strategies and tools and records it as a parent | `apps/web/src/components/studio/studio-workspace.tsx` |
+| Cost estimate in Studio | 8,000 input and 1,000 output tokens per decision, decisions per day rounded up over a 390-minute session, 21 trading days | `packages/agent/src/pricing.ts` |
+| Canvas | Built from the draft (inputs, then AI model, risk limits, broker); blocks are edited in the settings pane rather than wired by hand | `apps/web/src/components/studio/studio-canvas.tsx` |

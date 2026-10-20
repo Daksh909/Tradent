@@ -7,7 +7,7 @@ if (existsSync("../../.env")) process.loadEnvFile("../../.env");
 const config: NextConfig = {
   // Workspace packages ship TypeScript source.
   transpilePackages: ["@tradent/core", "@tradent/db", "@tradent/broker", "@tradent/agent"],
-  serverExternalPackages: ["postgres"],
+  serverExternalPackages: ["postgres", "@anthropic-ai/sdk"],
 };
 
 export default config;
