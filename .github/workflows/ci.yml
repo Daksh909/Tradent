@@ -29,3 +29,8 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm db:migrate
       - run: pnpm test
+      - run: pnpm --filter @tradent/web build
+      - run: pnpm --filter @tradent/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @tradent/web e2e
+        env:
+          CI: "true"
