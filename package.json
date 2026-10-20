@@ -11,7 +11,8 @@
     "db:up": "docker compose up -d db",
     "db:generate": "pnpm --filter @tradent/db generate",
     "db:migrate": "pnpm --filter @tradent/db migrate",
-    "db:seed": "pnpm --filter @tradent/db seed"
+    "db:seed": "pnpm --filter @tradent/db seed",
+    "worker": "pnpm --filter @tradent/worker start"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

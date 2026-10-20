@@ -13,6 +13,7 @@ import type {
   OrderRequest,
   Position,
   Quote,
+  TradingDay,
 } from "./types";
 
 export interface AlpacaSandboxConfig {
@@ -165,6 +166,11 @@ export class AlpacaSandboxBroker implements BrokerAdapter {
   async getClock(): Promise<MarketClock> {
     const c = await this.broker<Record<string, unknown>>("GET", "/clock");
     return { timestamp: String(c.timestamp), isOpen: Boolean(c.is_open), nextOpen: String(c.next_open), nextClose: String(c.next_close) };
+  }
+
+  async getCalendar(start: string, end: string): Promise<TradingDay[]> {
+    const days = await this.broker<{ date: string; open: string; close: string }[]>("GET", "/calendar", { query: { start, end } });
+    return (days ?? []).map((d) => ({ date: d.date, open: d.open, close: d.close }));
   }
 
   async getLatestQuotes(symbols: string[]): Promise<Quote[]> {

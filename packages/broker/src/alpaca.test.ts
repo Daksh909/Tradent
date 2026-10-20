@@ -73,3 +73,11 @@ describe("AlpacaSandboxBroker", () => {
     expect(calls[0]!.url.searchParams.get("end")).toBe("2026-10-20T14:45:00.000Z");
   });
 });
+
+describe("AlpacaSandboxBroker calendar", () => {
+  it("reads trading days from the broker calendar", async () => {
+    const { b, calls } = broker([[{ date: "2026-10-20", open: "09:30", close: "16:00", session_open: "0400", session_close: "2000" }]]);
+    expect(await b.getCalendar("2026-10-20", "2026-10-20")).toEqual([{ date: "2026-10-20", open: "09:30", close: "16:00" }]);
+    expect(calls[0]!.url.toString()).toBe(`${BROKER}/v1/calendar?start=2026-10-20&end=2026-10-20`);
+  });
+});
