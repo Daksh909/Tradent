@@ -34,3 +34,10 @@ Gap-filling choices made during the build, not decisions from SPEC.md's Decision
 | Fonts | System font stack (no web font download) | `apps/web/src/app/globals.css` |
 | Navigation | Discover (Library), Build (Studio, Forward tests), Trade (Trading, Portfolio), Account (Spend, Settings); Build and Spend shown to developers only | `apps/web/src/lib/nav.ts` |
 | Paper badge color | Amber, in the top bar of every page | `apps/web/src/components/paper-badge.tsx` |
+| Library contents | Per agent, its newest version that meets the listing rule; killed agents are left out | `packages/agent/src/library.ts` |
+| Library order | Highest total return first | `packages/agent/src/library.ts` |
+| Listing status | The worker marks a forward-testing agent listed after each DailyMetrics run once a version meets the rule | `apps/worker/src/main.ts` |
+| Agent detail version | The newest locked version unless one is picked | `packages/agent/src/library.ts` |
+| Decision reasoning on Agent detail | Each trade shows its decision time and the model's reasoning, which the spec's Trading page also shows to everyone; prompts never | `apps/web/src/app/(app)/agents/[agentId]/page.tsx` |
+| Follow and Fork buttons | Shown but disabled until paper-follow (step 7) and Studio (step 6c) exist; Fork only for developers | `apps/web/src/app/(app)/agents/[agentId]/page.tsx` |
+| Lineage view | A simple parents-to-version diagram; a React Flow graph can replace it | `apps/web/src/app/(app)/agents/[agentId]/page.tsx` |

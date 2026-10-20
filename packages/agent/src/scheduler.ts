@@ -97,14 +97,21 @@ export async function metricsDueDate(broker: BrokerAdapter, now: Date): Promise<
  * One DailyMetrics row per active version for a trading day, from the broker's
  * account equity. Rows already written are left alone, so this is safe to re-run.
  */
-export async function writeDailyMetrics(db: Db, broker: BrokerAdapter, date: string): Promise<number> {
+export async function writeDailyMetrics(db: Db, broker: BrokerAdapter, date: string, onlyVersionIds?: string[]): Promise<number> {
   const versions = await db
     .select({ versionId: s.agentVersions.id, accountId: s.paperAccounts.id, externalAccountId: s.paperAccounts.externalAccountId, startingCash: s.paperAccounts.startingCash })
     .from(s.agentVersions)
     .innerJoin(s.agents, eq(s.agentVersions.agentId, s.agents.id))
     .innerJoin(s.paperAccounts, eq(s.paperAccounts.agentVersionId, s.agentVersions.id))
     // Killed agents still hold positions, so their record keeps going.
-    .where(and(isNotNull(s.agentVersions.lockedAt), isNotNull(s.paperAccounts.externalAccountId), inArray(s.agents.status, [...ACTIVE])));
+    .where(
+      and(
+        isNotNull(s.agentVersions.lockedAt),
+        isNotNull(s.paperAccounts.externalAccountId),
+        inArray(s.agents.status, [...ACTIVE]),
+        onlyVersionIds ? inArray(s.agentVersions.id, onlyVersionIds) : undefined,
+      ),
+    );
 
   // Fills are dated by the New York trading day they happened on.
   const dayStart = sql`(${date}::date)::timestamp at time zone 'America/New_York'`;
