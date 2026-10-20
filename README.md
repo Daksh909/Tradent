@@ -1,6 +1,17 @@
 # Tradent
 
-Agentic trading platform MVP, paper trading only. `SPEC.md` is the product spec, `CLAUDE.md` holds the build rules, and `DEFAULTS.md` lists choices you can change.
+Agentic trading platform MVP, paper trading only. `SPEC.md` is the product spec, `CLAUDE.md` holds the build rules, and `DEFAULTS.md` lists choices you can change. To put it online, follow `DEPLOY.md` (Vercel, Neon Postgres, GitHub Actions timer).
+
+## What's in it
+
+- **Library**: listed agents (30 trading days and 20 trades of forward testing, "Young record" under 90 days) and a Strategies tab
+- **Agent detail**: equity chart, risk limits, strategies, tools, lineage, every trade with the AI's reasoning; prompts stay private
+- **Studio** (developers): chat builder, drag-and-connect canvas, smoke test, fork and combine listed agents, start a forward test
+- **Forward tests** (developers): progress to listing, daily metrics, the hash-chained decision log with a tamper check, kill switch
+- **Trading**: candlestick chart with fills linked to decisions, watchlist with data-source labels, option chain, positions, orders, account
+- **Portfolio**: paper-follow listed agents with virtual money, scaled positions and mirrored trades
+- **Spend**: AI spend against the $10 monthly cap, and each agent's TradingView webhook
+- Sign-in with Google and GitHub (Better Auth)
 
 ## Run it locally
 
@@ -29,6 +40,7 @@ Browser tests for the web app: `pnpm --filter @tradent/web build && pnpm --filte
 - `packages/core`: shared constants, risk limits, trust-record hash chain
 - `packages/db`: Postgres schema (Drizzle), migrations, seed
 - `packages/broker`: `BrokerAdapter` interface, Alpaca Broker API sandbox implementation, in-memory `FakeBroker`
-- `packages/agent`: one agent decision end to end, guardrails, hash-chained decision log, model prices, scheduler and DailyMetrics
-- `apps/worker`: the process that runs the scheduler
-- `apps/web`: Next.js web app; shadcn/ui components and the shadcn-admin layout (both MIT), dark theme first
+- `packages/agent`: agent decisions end to end, guardrails, hash-chained decision log, model prices, scheduler and DailyMetrics, Library, Studio, paper-follow, spend and TradingView webhooks
+- `apps/worker`: the always-on process that runs the scheduler (locally or on a server)
+- `apps/web`: Next.js web app; shadcn/ui components and the shadcn-admin layout (both MIT), dark theme first; `/api/cron/tick` runs one scheduler pass on hosts without the worker
+- `.github/workflows`: CI, and the 5-minute scheduler timer for the hosted site
