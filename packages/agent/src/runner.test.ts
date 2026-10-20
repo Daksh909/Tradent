@@ -7,6 +7,7 @@ import { createDb, eq, sql } from "@tradent/db";
 import * as s from "@tradent/db";
 import { verifyDecisionChain } from "./decision-log";
 import { runDecision, type MessagesClient } from "./runner";
+import { issueWebhookSecret, listWebhooks, MAX_ALERT_BYTES, receiveAlert } from "./webhooks";
 
 const url = process.env.DATABASE_URL;
 const NOW = new Date("2026-10-20T15:00:00Z");
@@ -107,5 +108,33 @@ describe.skipIf(!url)("runDecision", () => {
       await tx.execute(sql`alter table decision_logs enable trigger decision_logs_append_only`);
     });
     expect(await verifyDecisionChain(db, version.id)).toBe(1);
+  });
+  it("a TradingView alert places no order and reaches only the next decision", async () => {
+    const { broker, user, agent, version, externalAccountId } = await setup();
+    expect(await issueWebhookSecret(db, crypto.randomUUID(), agent.id)).toBeNull();
+    const { sourceId, secret } = (await issueWebhookSecret(db, user.id, agent.id))!;
+    const [stored] = await db.select().from(s.signalSources).where(eq(s.signalSources.id, sourceId));
+    expect(stored!.webhookSecretHash).not.toContain(secret);
+
+    expect(await receiveAlert(db, sourceId, "wrong", "{}")).toMatchObject({ status: 401 });
+    expect(await receiveAlert(db, sourceId, secret, "x".repeat(MAX_ALERT_BYTES + 1))).toMatchObject({ status: 413 });
+    expect(await receiveAlert(db, sourceId, secret, '{"ticker":"SPY","action":"buy"}')).toEqual({ status: 202 });
+    expect(await receiveAlert(db, sourceId, secret, "SPY crossed 500")).toEqual({ status: 202 });
+    // Stored, nothing else: no decision, no order, nothing at the broker.
+    expect(await db.select().from(s.decisionLogs).where(eq(s.decisionLogs.agentVersionId, version.id))).toHaveLength(0);
+    expect(await broker.getOrders(externalAccountId, { status: "all" })).toHaveLength(0);
+    expect((await listWebhooks(db, user.id))[0]).toMatchObject({ sourceId, pendingAlerts: 2 });
+
+    const model = scriptedModel([]);
+    await runDecision({ db, broker, anthropic: model.client, now: () => NOW }, version.id);
+    const [log] = await db.select().from(s.decisionLogs).where(eq(s.decisionLogs.agentVersionId, version.id));
+    const alerts = (log!.inputsSnapshot as { tradingViewAlerts: { payload: unknown }[] }).tradingViewAlerts;
+    expect(alerts.map((a) => a.payload)).toEqual(expect.arrayContaining([{ ticker: "SPY", action: "buy" }, { text: "SPY crossed 500" }]));
+    expect((await listWebhooks(db, user.id))[0]!.pendingAlerts).toBe(0);
+
+    // A new secret retires the old URL.
+    const rotated = (await issueWebhookSecret(db, user.id, agent.id))!;
+    expect(rotated.sourceId).toBe(sourceId);
+    expect(await receiveAlert(db, sourceId, secret, "{}")).toMatchObject({ status: 401 });
   });
 });

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getSpendSummary } from "@tradent/agent";
+import { getSpendSummary, listWebhooks } from "@tradent/agent";
 import { DeveloperOnly } from "@/components/developer-only";
 import { PageHeader } from "@/components/page-header";
 import { ProgressBar } from "@/components/progress-bar";
+import { WebhookRow } from "@/components/webhook-row";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getDb } from "@/lib/db";
@@ -18,7 +19,7 @@ const monthName = (m: string) => new Date(`${m}T12:00:00Z`).toLocaleString("en-U
 export default function Page() {
   return (
     <DeveloperOnly>
-      <PageHeader title="Spend" description="Your AI spend this month against the free cap." />
+      <PageHeader title="Spend" description="Your AI spend this month against the free cap, and your agents&apos; TradingView webhooks." />
       <Summary />
     </DeveloperOnly>
   );
@@ -26,7 +27,7 @@ export default function Page() {
 
 async function Summary() {
   const user = (await getCurrentUser())!;
-  const s = await getSpendSummary(getDb(), user.id);
+  const [s, hooks] = await Promise.all([getSpendSummary(getDb(), user.id), listWebhooks(getDb(), user.id)]);
   const left = Math.max(0, s.cap - s.spent);
 
   return (
@@ -132,7 +133,20 @@ async function Summary() {
         <CardHeader>
           <CardTitle>TradingView webhooks</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">Each agent&apos;s webhook address and secret will appear here with the TradingView step of the build.</CardContent>
+        <CardContent className="text-sm">
+          <p className="text-muted-foreground">
+            A TradingView alert sent to an agent&apos;s webhook is stored and handed to its next scheduled decision as an input. It never places an order by itself. The alert message can be JSON or plain text, up to 4 KB.
+          </p>
+          {hooks.length === 0 ? (
+            <p className="mt-3 text-muted-foreground">Create an agent in Studio first.</p>
+          ) : (
+            <ul className="divide-y" data-testid="webhooks">
+              {hooks.map((h) => (
+                <WebhookRow key={h.agentId} agentId={h.agentId} agentName={h.agentName} exists={!!h.sourceId} pendingAlerts={h.pendingAlerts} alertsOn={h.alertsOn} />
+              ))}
+            </ul>
+          )}
+        </CardContent>
       </Card>
     </div>
   );
