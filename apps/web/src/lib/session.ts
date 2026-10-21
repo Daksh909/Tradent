@@ -7,7 +7,7 @@ import { getDb } from "./db";
 
 export const USER_COOKIE = "tradent_demo_user";
 
-export type CurrentUser = Pick<typeof s.users.$inferSelect, "id" | "email" | "displayName" | "isDeveloper" | "isInvestor" | "isAdmin">;
+export type CurrentUser = Pick<typeof s.users.$inferSelect, "id" | "email" | "displayName" | "isDeveloper" | "isInvestor" | "isAdmin" | "isAnonymous">;
 
 const columns = {
   id: s.users.id,
@@ -16,6 +16,7 @@ const columns = {
   isDeveloper: s.users.isDeveloper,
   isInvestor: s.users.isInvestor,
   isAdmin: s.users.isAdmin,
+  isAnonymous: s.users.isAnonymous,
 };
 
 // DEFAULT: demo sign-in (pick any user, no password) is on only when

@@ -59,6 +59,36 @@ export function SocialSignIn({ providers }: { providers: ("google" | "github")[]
   );
 }
 
+export function GuestSignIn() {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <div className="space-y-2">
+      <Button
+        className="w-full"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          setError(null);
+          const res = await authClient.signIn.anonymous();
+          if (res.error) {
+            setError(res.error.message ?? "Couldn't start a guest session");
+            setBusy(false);
+            return;
+          }
+          router.push("/library");
+          router.refresh();
+        }}
+      >
+        Continue as guest
+      </Button>
+      <p className="text-center text-xs text-muted-foreground">No sign-up. Your guest account lives in this browser, so clearing its cookies or signing out ends it.</p>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+    </div>
+  );
+}
+
 export function DemoSignIn({ users }: { users: CurrentUser[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();

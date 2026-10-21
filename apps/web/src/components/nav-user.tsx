@@ -59,7 +59,7 @@ export function NavUser({ user, demoUsers, demoMode }: { user: CurrentUser; demo
             <DropdownMenuLabel className="font-normal">
               <div className="grid text-sm leading-tight">
                 <span className="truncate font-semibold">{user.displayName}</span>
-                <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                <span className="truncate text-xs text-muted-foreground">{user.isAnonymous ? "Guest account" : user.email}</span>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

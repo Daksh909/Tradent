@@ -6,7 +6,7 @@ import { FakeBroker } from "@tradent/broker";
 import { createDb, eq, sql } from "@tradent/db";
 import * as s from "@tradent/db";
 import { verifyDecisionChain } from "./decision-log";
-import { runDecision, type MessagesClient } from "./runner";
+import { runDecision, spendCapReached, type MessagesClient } from "./runner";
 import { issueWebhookSecret, listWebhooks, MAX_ALERT_BYTES, receiveAlert } from "./webhooks";
 
 const url = process.env.DATABASE_URL;
@@ -88,6 +88,21 @@ describe.skipIf(!url)("runDecision", () => {
     const model = scriptedModel([]);
     expect(await runDecision({ db, broker, anthropic: model.client, now: () => NOW }, version.id)).toEqual({ status: "skipped", reason: "spend_cap" });
     expect(model.calls).toHaveLength(0);
+  });
+
+  it("stops everyone once the whole site reaches its monthly AI cap", async () => {
+    // A month no other test writes to; the cap sits $50 above whatever earlier runs left there.
+    const month = new Date("2031-01-15T15:00:00Z");
+    const [prior] = await db.select({ n: sql<string>`coalesce(sum(${s.spendLedger.dollarsSpent}), 0)` }).from(s.spendLedger).where(eq(s.spendLedger.month, "2031-01-01"));
+    const cap = Number(prior!.n) + 50;
+    const mk = async () => (await db.insert(s.users).values({ email: `${crypto.randomUUID()}@test.local`, displayName: "Dev", isDeveloper: true }).returning())[0]!.id;
+    const [a, b] = [await mk(), await mk()];
+    expect(await spendCapReached(db, b, month, cap)).toBeNull();
+    await db.insert(s.spendLedger).values({ developerId: a, month: "2031-01-01", dollarsSpent: "10" });
+    expect(await spendCapReached(db, a, month, cap)).toBe("developer");
+    expect(await spendCapReached(db, b, month, cap)).toBeNull();
+    for (let i = 0; i < 4; i++) await db.insert(s.spendLedger).values({ developerId: await mk(), month: "2031-01-01", dollarsSpent: "10" });
+    expect(await spendCapReached(db, b, month, cap)).toBe("site");
   });
 
   it("skips when the market is closed", async () => {

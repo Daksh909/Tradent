@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Activity } from "lucide-react";
 import { PaperBadge } from "@/components/paper-badge";
-import { DemoSignIn, SocialSignIn } from "@/components/sign-in-buttons";
+import { DemoSignIn, GuestSignIn, SocialSignIn } from "@/components/sign-in-buttons";
 import { enabledProviders } from "@/lib/auth";
 import { demoSignInEnabled, getCurrentUser, listDemoUsers } from "@/lib/session";
 
@@ -25,13 +25,11 @@ export default async function SignInPage() {
             <div className="flex size-10 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
               <Activity className="size-5" />
             </div>
-            <h1 className="text-xl font-semibold">Sign in to Tradent</h1>
+            <h1 className="text-xl font-semibold">Try Tradent</h1>
             <p className="text-sm text-muted-foreground">Build, forward-test and paper-follow AI trading agents. Paper trading only, no real money.</p>
           </div>
+          <GuestSignIn />
           <SocialSignIn providers={enabledProviders} />
-          {enabledProviders.length === 0 && !demo && (
-            <p className="text-center text-sm text-muted-foreground">Sign-in isn&apos;t configured yet: set the Google or GitHub OAuth keys.</p>
-          )}
           {demo && <DemoSignIn users={demoUsers} />}
         </div>
       </main>

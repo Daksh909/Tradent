@@ -8,6 +8,7 @@ test("signed-out visitors land on the sign-in page, which shows the Paper badge"
   await page.goto("/portfolio");
   await expect(page).toHaveURL(/\/sign-in$/);
   await expect(page.getByTestId("paper-badge")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Continue as guest" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Continue with Google" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Continue with GitHub" })).toBeVisible();
 });
@@ -26,6 +27,19 @@ for (const [provider, host, label] of [
     expect(url.searchParams.get("redirect_uri")).toBe(`http://localhost:3100/api/auth/callback/${provider}`);
   });
 }
+
+test("a guest gets their own account with one click", async ({ page }) => {
+  await page.goto("/sign-in");
+  await page.getByRole("button", { name: "Continue as guest" }).click();
+  await expect(page).toHaveURL(/\/library$/);
+  await page.getByTestId("user-menu").click();
+  await expect(page.getByText("Guest account")).toBeVisible();
+  // A guest can turn on developer tools like anyone else.
+  await page.keyboard.press("Escape");
+  await page.goto("/settings");
+  await page.getByTestId("developer-toggle").click();
+  await expect(page.getByRole("link", { name: "Studio" })).toBeVisible();
+});
 
 test("demo sign-in, then sign out", async ({ page }) => {
   await page.goto("/sign-in");
