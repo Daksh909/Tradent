@@ -17,24 +17,33 @@ function socialProviders() {
 
 export const enabledProviders = Object.keys(socialProviders()) as ("google" | "github")[];
 
-export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL,
-  database: drizzleAdapter(getDb(), {
-    provider: "pg",
-    usePlural: true,
-    schema: { users: schema.users, sessions: schema.sessions, accounts: schema.accounts, verifications: schema.verifications },
-  }),
-  user: {
-    fields: { name: "displayName" },
-    // Roles are ours to set, never taken from sign-in input. New accounts are investors.
-    additionalFields: {
-      isDeveloper: { type: "boolean", required: false, defaultValue: false, input: false },
-      isInvestor: { type: "boolean", required: false, defaultValue: true, input: false },
-      isAdmin: { type: "boolean", required: false, defaultValue: false, input: false },
+function createAuth() {
+  return betterAuth({
+    baseURL: process.env.BETTER_AUTH_URL,
+    database: drizzleAdapter(getDb(), {
+      provider: "pg",
+      usePlural: true,
+      schema: { users: schema.users, sessions: schema.sessions, accounts: schema.accounts, verifications: schema.verifications },
+    }),
+    user: {
+      fields: { name: "displayName" },
+      // Roles are ours to set, never taken from sign-in input. New accounts are investors.
+      additionalFields: {
+        isDeveloper: { type: "boolean", required: false, defaultValue: false, input: false },
+        isInvestor: { type: "boolean", required: false, defaultValue: true, input: false },
+        isAdmin: { type: "boolean", required: false, defaultValue: false, input: false },
+      },
     },
-  },
-  socialProviders: socialProviders(),
-  advanced: { database: { generateId: "uuid" } },
-  telemetry: { enabled: false },
-  plugins: [nextCookies()],
-});
+    socialProviders: socialProviders(),
+    advanced: { database: { generateId: "uuid" } },
+    telemetry: { enabled: false },
+    plugins: [nextCookies()],
+  });
+}
+
+let instance: ReturnType<typeof createAuth> | undefined;
+
+/** Built on first use, so `next build` runs without a database. */
+export function getAuth() {
+  return (instance ??= createAuth());
+}

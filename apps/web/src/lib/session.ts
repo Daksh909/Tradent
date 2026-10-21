@@ -2,7 +2,7 @@ import "server-only";
 import { cookies, headers } from "next/headers";
 import { desc, eq } from "@tradent/db";
 import * as s from "@tradent/db";
-import { auth } from "./auth";
+import { getAuth } from "./auth";
 import { getDb } from "./db";
 
 export const USER_COOKIE = "tradent_demo_user";
@@ -32,7 +32,7 @@ async function userById(id: string): Promise<CurrentUser | null> {
 
 /** The signed-in user: a Google or GitHub session, else (demo mode only) the demo user. */
 export async function getCurrentUser(): Promise<CurrentUser | null> {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getAuth().api.getSession({ headers: await headers() });
   if (session) return userById(session.user.id);
   if (!demoSignInEnabled()) return null;
   const id = (await cookies()).get(USER_COOKIE)?.value;
