@@ -1,13 +1,13 @@
 // Studio: drafts, versions, forks and combinations, the smoke test, and
 // starting a forward test. Every function here acts for one developer and
 // checks they own what they touch.
-import { AGENT_MODELS, DEFAULT_STARTING_CASH_USD, MONTHLY_AI_SPEND_CAP_USD, clampRiskLimits, type AgentModel, type RiskLimits } from "@tradent/core";
+import { AGENT_MODELS, DEFAULT_STARTING_CASH_USD, clampRiskLimits, type AgentModel, type RiskLimits } from "@tradent/core";
 import { FakeBroker, type BrokerAdapter } from "@tradent/broker";
 import { and, asc, desc, eq, inArray, sql } from "@tradent/db";
 import * as s from "@tradent/db";
 import type { Db } from "@tradent/db";
 import { listLibraryAgents } from "./library";
-import { DATA_TOOLS, PROPOSE_TOOL, addSpend, decide, monthlySpend, type MessagesClient } from "./runner";
+import { DATA_TOOLS, PROPOSE_TOOL, addSpend, decide, spendCapReached, type MessagesClient } from "./runner";
 
 export type StrategyType = (typeof s.strategyType.enumValues)[number];
 
@@ -336,7 +336,9 @@ export async function runSmokeTest(deps: { db: Db; broker: BrokerAdapter; anthro
   const { db } = deps;
   const now = (deps.now ?? (() => new Date()))();
   const { version } = await ownedVersion(db, ownerId, versionId);
-  if ((await monthlySpend(db, ownerId, now)) >= MONTHLY_AI_SPEND_CAP_USD) throw new StudioError("You've used this month's $10 of AI. Smoke tests resume next month.");
+  const cap = await spendCapReached(db, ownerId, now);
+  if (cap === "developer") throw new StudioError("You've used this month's $10 of AI. Smoke tests resume next month.");
+  if (cap === "site") throw new StudioError("Tradent's free AI for this month is used up. Smoke tests resume next month.");
 
   const scratch = smokeTestBroker(deps.broker);
   const { externalAccountId } = await scratch.createPaperAccount({ label: "smoke test", startingCash: DEFAULT_STARTING_CASH_USD });

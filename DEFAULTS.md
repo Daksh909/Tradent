@@ -76,3 +76,5 @@ Gap-filling choices made during the build, not decisions from SPEC.md's Decision
 | Cron endpoint time limit | 60 seconds per pass on Vercel | `apps/web/src/app/api/cron/tick/route.ts` |
 | Scheduler workflow hours | Every 5 minutes, 13:00 to 21:59 UTC on weekdays (covers the session and the after-close metrics in EDT and EST) | `.github/workflows/scheduler.yml` |
 | Migrations on deploy | Every production build runs `pnpm db:migrate` before building | `apps/web/vercel.json` |
+| Guest accounts | "Continue as guest" makes an account with no sign-in; it lives in that browser's session cookie and starts as an investor (developer tools are one toggle in Settings) | `apps/web/src/lib/auth.ts` |
+| Site-wide AI cap | All AI spend across the site stops at $50 per calendar month, on top of each developer's $10; `TRADENT_SITE_AI_CAP_USD` overrides it | `packages/core/src/constants.ts`, `packages/agent/src/runner.ts` |

@@ -40,6 +40,8 @@ export const users = pgTable("users", {
   // Sign-in fields Better Auth needs (Decision 17).
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
+  // Guest accounts made without sign-in (Decision 21).
+  isAnonymous: boolean("is_anonymous").notNull().default(false),
   createdAt: createdAt(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

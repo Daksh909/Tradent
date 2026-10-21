@@ -49,7 +49,7 @@ Never set `TRADENT_DEMO_SIGN_IN` on Vercel: it lets anyone sign in as anyone.
 - Google: Cloud Console → Credentials → OAuth client ID (Web), redirect
   `https://<your site>/api/auth/callback/google`.
 
-Without these nobody can sign in on the public site.
+Optional: without these, visitors use "Continue as guest". With them, the Google and GitHub buttons appear next to it.
 
 ## 5. The decision timer (Decision 20)
 

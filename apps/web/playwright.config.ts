@@ -20,6 +20,8 @@ export default defineConfig({
       ALPACA_BROKER_API_KEY: "",
       ALPACA_BROKER_API_SECRET: "",
       TRADENT_DEMO_SIGN_IN: "true",
+      // The test database keeps spend from earlier runs, so the site-wide AI cap is lifted.
+      TRADENT_SITE_AI_CAP_USD: "1000000000",
       BETTER_AUTH_URL: `http://localhost:${PORT}`,
       BETTER_AUTH_SECRET: "e2e-only-secret-not-used-anywhere-else-0123456789",
       // Placeholder OAuth apps: tests check the redirect to GitHub and Google, never complete it.

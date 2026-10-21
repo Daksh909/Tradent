@@ -2,10 +2,10 @@
 // words and Claude drafts the agent (SPEC.md "Agent builder"). The draft is
 // only a suggestion the developer edits; nothing is saved until they save.
 import type Anthropic from "@anthropic-ai/sdk";
-import { MONTHLY_AI_SPEND_CAP_USD, clampRiskLimits, type AgentModel } from "@tradent/core";
+import { clampRiskLimits, type AgentModel } from "@tradent/core";
 import type { Db } from "@tradent/db";
 import { MODEL_IDS, responseCost } from "./pricing";
-import { DATA_TOOLS, addSpend, monthlySpend, type MessagesClient } from "./runner";
+import { DATA_TOOLS, addSpend, spendCapReached, type MessagesClient } from "./runner";
 import { CADENCES, StudioError, type Draft, type StrategyType } from "./studio";
 
 // DEFAULT: the chat builder runs on Sonnet 5.5, and its cost counts toward the developer's $10 cap.
@@ -92,7 +92,9 @@ export async function chatWithBuilder(deps: { db: Db; anthropic: MessagesClient;
   const now = (deps.now ?? (() => new Date()))();
   if (history.length === 0 || history[history.length - 1]!.role !== "user") throw new StudioError("Send a message first.");
   if (history.some((t) => t.text.length > 8000) || history.length > 40) throw new StudioError("This chat is too long; start a new draft.");
-  if ((await monthlySpend(deps.db, ownerId, now)) >= MONTHLY_AI_SPEND_CAP_USD) throw new StudioError("You've used this month's $10 of AI. The builder resumes next month.");
+  const cap = await spendCapReached(deps.db, ownerId, now);
+  if (cap === "developer") throw new StudioError("You've used this month's $10 of AI. The builder resumes next month.");
+  if (cap === "site") throw new StudioError("Tradent's free AI for this month is used up. The builder resumes next month.");
 
   const messages: Anthropic.Beta.BetaMessageParam[] = history.map((t) => ({ role: t.role, content: t.text }));
   if (current) {

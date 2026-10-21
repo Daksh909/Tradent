@@ -2,7 +2,7 @@
 import { createHash } from "node:crypto";
 import type Anthropic from "@anthropic-ai/sdk";
 import { and, eq, isNull, sql } from "@tradent/db";
-import { MONTHLY_AI_SPEND_CAP_USD, type AgentModel, type RiskLimits } from "@tradent/core";
+import { MONTHLY_AI_SPEND_CAP_USD, SITE_MONTHLY_AI_SPEND_CAP_USD, type AgentModel, type RiskLimits } from "@tradent/core";
 import type { AccountSummary, BrokerAdapter, Quote } from "@tradent/broker";
 import * as s from "@tradent/db";
 import type { Db } from "@tradent/db";
@@ -125,6 +125,28 @@ export async function monthlySpend(db: Db, developerId: string, now: Date): Prom
   return Number(row?.dollars ?? 0);
 }
 
+/** All developers' AI spend this month. */
+export async function siteMonthlySpend(db: Db, now: Date): Promise<number> {
+  const [row] = await db
+    .select({ dollars: sql<string>`coalesce(sum(${s.spendLedger.dollarsSpent}), 0)` })
+    .from(s.spendLedger)
+    .where(eq(s.spendLedger.month, monthStart(now)));
+  return Number(row?.dollars ?? 0);
+}
+
+/** The site-wide cap; TRADENT_SITE_AI_CAP_USD overrides the default. */
+export function siteSpendCapUsd(): number {
+  const v = Number(process.env.TRADENT_SITE_AI_CAP_USD);
+  return Number.isFinite(v) && v > 0 ? v : SITE_MONTHLY_AI_SPEND_CAP_USD;
+}
+
+/** Which cap, if any, stops this developer's AI calls now. */
+export async function spendCapReached(db: Db, developerId: string, now: Date, siteCap = siteSpendCapUsd()): Promise<"developer" | "site" | null> {
+  if ((await monthlySpend(db, developerId, now)) >= MONTHLY_AI_SPEND_CAP_USD) return "developer";
+  if ((await siteMonthlySpend(db, now)) >= siteCap) return "site";
+  return null;
+}
+
 export async function addSpend(db: Db, developerId: string, now: Date, dollars: number) {
   await db
     .insert(s.spendLedger)
@@ -153,7 +175,7 @@ export async function runDecision(deps: RunnerDeps, agentVersionId: string): Pro
   // Step 1: only forward-testing, live agents whose developer is under the cap, during market hours.
   if (version.agent.killed) return { status: "skipped", reason: "killed" };
   if (version.agent.status !== "forward_testing" && version.agent.status !== "listed") return { status: "skipped", reason: "not_forward_testing" };
-  if ((await monthlySpend(db, version.agent.ownerId, startedAt)) >= MONTHLY_AI_SPEND_CAP_USD) return { status: "skipped", reason: "spend_cap" };
+  if (await spendCapReached(db, version.agent.ownerId, startedAt)) return { status: "skipped", reason: "spend_cap" };
   if (!(await broker.getClock()).isOpen) return { status: "skipped", reason: "market_closed" };
 
   const riskLimits = version.riskLimits as RiskLimits;

@@ -2,6 +2,8 @@ import "server-only";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { nextCookies } from "better-auth/next-js";
+import { anonymous } from "better-auth/plugins";
+import { randomBytes } from "node:crypto";
 import * as schema from "@tradent/db";
 import { getDb } from "./db";
 
@@ -37,7 +39,11 @@ function createAuth() {
     socialProviders: socialProviders(),
     advanced: { database: { generateId: "uuid" } },
     telemetry: { enabled: false },
-    plugins: [nextCookies()],
+    plugins: [
+      // Guest accounts: one click, no sign-in (Decision 21). nextCookies stays last.
+      anonymous({ generateName: () => `Guest ${randomBytes(2).toString("hex").toUpperCase()}` }),
+      nextCookies(),
+    ],
   });
 }
 

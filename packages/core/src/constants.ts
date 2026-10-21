@@ -3,6 +3,10 @@
 /** Decision 11: AI spend cap per developer per calendar month, in US dollars. */
 export const MONTHLY_AI_SPEND_CAP_USD = 10;
 
+// DEFAULT: with guest accounts anyone can become a developer, so all AI spend
+// across the site stops at $50 a calendar month.
+export const SITE_MONTHLY_AI_SPEND_CAP_USD = 50;
+
 /** Decision 12: forward-test minimums before an agent version is listed. */
 export const LISTING_MIN_TRADING_DAYS = 30;
 export const LISTING_MIN_TRADES = 20;
