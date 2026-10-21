@@ -282,6 +282,7 @@ All decided by Daksh on 2026-10-20. Where anything above disagrees, this list wi
 | 18 | What counts toward the $10 AI cap | Everything | Forward-test decisions, Studio chat builder messages and smoke tests all count, so each developer's AI bill stays capped at $10 a month |
 | 19 | Following an agent that already holds positions | Copy current positions | The follower starts with a scaled copy of the agent's holdings, so their return tracks the agent's record exactly from the day they follow |
 | 20 | What runs the decision timer on the hosted site | GitHub Actions | A scheduled workflow calls the site's scheduler endpoint every 5 minutes for free; Vercel's free plan only runs cron jobs daily |
+| 21 | How visitors get in on the public MVP (replaces Google/GitHub sign-in for now, row 17) | Guest accounts | "Continue as guest" makes an account with one click, no sign-up. Google and GitHub buttons appear only if their keys are set. Because anyone can become a developer, all AI spend across the site also stops at $50 a month (Default) |
 
 ## Still open outside the code (Daksh's actions, none blocks the build)
 
