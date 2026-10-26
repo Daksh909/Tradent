@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CADENCES, emptyDraft, estimateMonthlyCostUsd, forkDraft, listLibraryAgents, listSmokeTests, listStudioAgents, loadDraft, monthlySpend } from "@tradent/agent";
+import { defaultModel } from "@/lib/anthropic";
 import { AGENT_MODELS, MONTHLY_AI_SPEND_CAP_USD } from "@tradent/core";
 import { DeveloperOnly } from "@/components/developer-only";
 import { PageHeader } from "@/components/page-header";
@@ -34,7 +35,7 @@ async function Workspace({ q }: { q: Search }) {
     (q.version && UUID.test(q.version) ? await loadDraft(db, user.id, q.version) : null) ??
     (q.fork && UUID.test(q.fork) ? await forkDraft(db, user.id, q.fork) : null) ??
     (!q.new && !q.fork && newest ? await loadDraft(db, user.id, newest) : null) ??
-    emptyDraft();
+    emptyDraft(defaultModel());
 
   const library = (await listLibraryAgents(db)).filter((v) => !agents.some((a) => a.agentId === v.agentId)).map((v) => ({ versionId: v.versionId, label: `${v.agentName} v${v.version}` }));
   const smokeTests = draft.baseVersionId ? await listSmokeTests(db, user.id, draft.baseVersionId) : [];

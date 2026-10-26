@@ -7,6 +7,7 @@ export const MODEL_IDS: Record<AgentModel, string> = {
   haiku: "claude-haiku-5-5",
   sonnet: "claude-sonnet-5-5",
   opus: "claude-opus-5-5",
+  gemini_flash: "gemini-3.8-flash",
 };
 
 interface Price {
@@ -22,6 +23,9 @@ const PRICES_PER_MTOK: Record<string, Price> = {
   "claude-opus-5": { input: 5, output: 25 },
   "claude-opus-4-8": { input: 5, output: 25 },
   "claude-sonnet-5": { input: 2, output: 10 },
+  // DEFAULT: Gemini runs on Google's free tier (ai.google.dev/gemini-api/docs/pricing, checked
+  // 2026-10-26), so it costs $0. If billing is turned on for the Gemini key, add its paid price here.
+  "gemini-3.8-flash": { input: 0, output: 0 },
 };
 
 // Cache writes cost 1.25x input and cache reads 0.1x input (5-minute cache).
@@ -36,7 +40,8 @@ interface TokenCounts {
 }
 
 function priceFor(model: string): Price {
-  const p = PRICES_PER_MTOK[model];
+  // Gemini reports versioned ids such as gemini-3.8-flash-001.
+  const p = PRICES_PER_MTOK[model] ?? (model.startsWith("gemini-3.8-flash") ? PRICES_PER_MTOK["gemini-3.8-flash"] : undefined);
   // Unknown model: price it as the most expensive one we list rather than as free.
   return p ?? { input: 5, output: 25 };
 }

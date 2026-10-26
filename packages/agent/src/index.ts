@@ -12,3 +12,4 @@ export * from "./builder";
 export * from "./spend";
 export * from "./follow";
 export * from "./webhooks";
+export * from "./gemini";

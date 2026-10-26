@@ -40,6 +40,7 @@ const MODELS: [Draft["model"], string][] = [
   ["haiku", "Claude Haiku 5.5"],
   ["sonnet", "Claude Sonnet 5.5"],
   ["opus", "Claude Opus 5.5"],
+  ["gemini_flash", "Gemini 3.8 Flash (free, not private)"],
 ];
 
 // A save reopens the page on the saved version, which remounts this component; the notice carries over.
@@ -411,6 +412,11 @@ function Settings({
               ))}
             </select>
           </Field>
+          {draft.model === "gemini_flash" && (
+            <p className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs" data-testid="gemini-warning">
+              Gemini runs on Google&apos;s free tier, and Google may use what this agent sends (its instructions and market data) to improve its products. Pick a Claude model to keep the instructions private.
+            </p>
+          )}
           <Field label="Cadence during market hours">
             <select className="h-9 w-full rounded-md border bg-background px-2" value={draft.cadenceMinutes} onChange={(e) => update({ cadenceMinutes: Number(e.target.value) })}>
               {cadences.map((c) => (

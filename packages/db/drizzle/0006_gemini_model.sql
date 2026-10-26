@@ -1,0 +1,1 @@
+ALTER TYPE "public"."agent_model" ADD VALUE 'gemini_flash';

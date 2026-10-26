@@ -40,7 +40,7 @@ An agent version is listed for investors after 30 trading days **and** at least 
 
 ## Models and cost
 
-Developer picks per agent: Claude Haiku 5.5, Sonnet 5.5 or Opus 5.5. Confirm current model ids and prices with the Anthropic docs before hard-coding them; keep the price table in one config file. Record actual tokens and dollars per decision from the API usage fields.
+Developer picks per agent: Claude Haiku 5.5, Sonnet 5.5 or Opus 5.5, or free Gemini 3.8 Flash (Decision 22, via `@google/genai` behind the same client interface). Confirm current model ids and prices with the Anthropic docs before hard-coding them; keep the price table in one config file. Record actual tokens and dollars per decision from the API usage fields.
 
 ## Suggested build order
 
@@ -59,4 +59,4 @@ The "Done means" checklist in SPEC.md passes, with automated tests for: guardrai
 
 ## Environment variables (names only; never commit values)
 
-`DATABASE_URL`, `ANTHROPIC_API_KEY`, `ALPACA_BROKER_API_KEY`, `ALPACA_BROKER_API_SECRET`, `ALPACA_BROKER_BASE_URL` (sandbox), `ALPACA_DATA_BASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `TRADENT_DEMO_SIGN_IN` (local and tests only). Provide `.env.example`.
+`DATABASE_URL`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `ALPACA_BROKER_API_KEY`, `ALPACA_BROKER_API_SECRET`, `ALPACA_BROKER_BASE_URL` (sandbox), `ALPACA_DATA_BASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `TRADENT_DEMO_SIGN_IN` (local and tests only). Provide `.env.example`.

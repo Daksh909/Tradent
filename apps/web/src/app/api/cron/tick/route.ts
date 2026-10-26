@@ -1,6 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { schedulerPass } from "@tradent/agent";
-import { getAnthropic } from "@/lib/anthropic";
+import { getModelClient } from "@/lib/anthropic";
 import { getBroker } from "@/lib/broker";
 import { getDb } from "@/lib/db";
 
@@ -21,8 +21,8 @@ function authorized(req: Request): boolean {
 async function handle(req: Request) {
   if (!authorized(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
   const broker = getBroker();
-  const anthropic = getAnthropic();
-  if (!broker || !anthropic) return Response.json({ error: "The scheduler needs the Alpaca sandbox keys and ANTHROPIC_API_KEY" }, { status: 503 });
+  const anthropic = getModelClient();
+  if (!broker || !anthropic) return Response.json({ error: "The scheduler needs the Alpaca sandbox keys and GEMINI_API_KEY or ANTHROPIC_API_KEY" }, { status: 503 });
   const events = await schedulerPass({ db: getDb(), broker, anthropic });
   for (const e of events) console.log(JSON.stringify({ at: new Date().toISOString(), ...e }));
   return Response.json({ events });

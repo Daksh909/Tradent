@@ -41,14 +41,15 @@ export interface Draft {
   parentVersionIds: string[];
 }
 
-// DEFAULT: a new draft decides hourly on Sonnet with the platform's limits and every data tool.
-export function emptyDraft(): Draft {
+// DEFAULT: a new draft decides hourly on Sonnet (free Gemini Flash when Claude isn't set up)
+// with the platform's limits and every data tool.
+export function emptyDraft(model: AgentModel = "sonnet"): Draft {
   const limits = clampRiskLimits({});
   return {
     name: "",
     publicSummary: "",
     instructions: "",
-    model: "sonnet",
+    model,
     cadenceMinutes: 60,
     symbols: [],
     tools: [...DATA_TOOLS],

@@ -15,7 +15,11 @@ test("a developer drafts, saves and edits a new agent", async ({ page, context }
   await canvas(page).getByText("AI model: Sonnet 5.5").click();
   await expect(page.getByTestId("cost-estimate")).toContainText("$3.82");
   await page.getByTestId("instructions").fill("Buy SPY when RSI(14) < 30.");
+  await page.getByTestId("model-select").selectOption("gemini_flash");
+  await expect(page.getByTestId("gemini-warning")).toContainText("Google may use what this agent sends");
+  await expect(page.getByTestId("cost-estimate")).toContainText("$0.00");
   await page.getByTestId("model-select").selectOption("haiku");
+  await expect(page.getByTestId("gemini-warning")).toHaveCount(0);
   await expect(canvas(page).getByText("AI model: Haiku 5.5")).toBeVisible();
 
   await page.getByTestId("save-version").click();
