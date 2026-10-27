@@ -8,7 +8,8 @@ import { MODEL_IDS, responseCost } from "./pricing";
 import { DATA_TOOLS, addSpend, spendCapReached, type MessagesClient } from "./runner";
 import { CADENCES, StudioError, type Draft, type StrategyType } from "./studio";
 
-// DEFAULT: the chat builder runs on Sonnet 5.5, and its cost counts toward the developer's $10 cap.
+// DEFAULT: the chat builder runs on Sonnet 5.5 when Claude is set up, otherwise on free
+// Gemini Flash; its cost counts toward the developer's $10 cap.
 export const BUILDER_MODEL: AgentModel = "sonnet";
 const DRAFT_TOOL = "draft_agent";
 
@@ -25,7 +26,7 @@ const TOOL: Anthropic.Beta.BetaTool = {
       public_summary: { type: "string", description: "Two or three sentences investors will read. No hype, no promises of returns" },
       instructions: { type: "string", description: "The agent's private instructions: the full trading rules the model follows at each decision" },
       symbols: { type: "array", items: { type: "string" }, description: "US equity tickers the agent may trade" },
-      model: { type: "string", enum: ["haiku", "sonnet", "opus"] },
+      model: { type: "string", enum: ["haiku", "sonnet", "opus", "gemini_flash"], description: "gemini_flash is free but Google may use its prompts to improve its products; Claude models are private and paid" },
       cadence_minutes: { type: "integer", enum: [...CADENCES], description: "Minutes between decisions during market hours" },
       tools: { type: "array", items: { type: "string", enum: [...DATA_TOOLS] }, description: "Read-only data tools the agent needs" },
       trading_view_alerts: { type: "boolean", description: "Whether the strategy is triggered by the developer's TradingView alerts" },
@@ -88,7 +89,7 @@ interface DraftInput {
 }
 
 /** One chat turn. The newest user message comes last in history; the current draft, if any, gives context. */
-export async function chatWithBuilder(deps: { db: Db; anthropic: MessagesClient; now?: () => Date }, ownerId: string, history: ChatTurn[], current?: Partial<Draft>): Promise<BuilderReply> {
+export async function chatWithBuilder(deps: { db: Db; anthropic: MessagesClient; builderModel?: AgentModel; now?: () => Date }, ownerId: string, history: ChatTurn[], current?: Partial<Draft>): Promise<BuilderReply> {
   const now = (deps.now ?? (() => new Date()))();
   if (history.length === 0 || history[history.length - 1]!.role !== "user") throw new StudioError("Send a message first.");
   if (history.some((t) => t.text.length > 8000) || history.length > 40) throw new StudioError("This chat is too long; start a new draft.");
@@ -103,7 +104,7 @@ export async function chatWithBuilder(deps: { db: Db; anthropic: MessagesClient;
     last.content = `${last.content as string}\n\nCurrent draft:\n${JSON.stringify(current, null, 2)}`;
   }
 
-  const model = MODEL_IDS[BUILDER_MODEL];
+  const model = MODEL_IDS[deps.builderModel ?? BUILDER_MODEL];
   const res = await deps.anthropic.beta.messages.create({
     model,
     max_tokens: 8000,

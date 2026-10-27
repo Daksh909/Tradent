@@ -33,7 +33,8 @@ Migrations run on every production build, and on any build that has `DATABASE_UR
 | `ALPACA_BROKER_API_KEY`, `ALPACA_BROKER_API_SECRET` | Your Broker API **sandbox** key |
 | `ALPACA_BROKER_BASE_URL` | `https://broker-api.sandbox.alpaca.markets` |
 | `ALPACA_DATA_BASE_URL` | `https://data.sandbox.alpaca.markets` |
-| `ANTHROPIC_API_KEY` | A key from console.anthropic.com (starts with `sk-ant-api`) |
+| `GEMINI_API_KEY` | A free key from aistudio.google.com (Get API key). Enough on its own to run agents on Gemini 3.8 Flash |
+| `ANTHROPIC_API_KEY` | Optional, for Claude models: a key from console.anthropic.com (starts with `sk-ant-api`) |
 | `BETTER_AUTH_SECRET` | Output of `openssl rand -base64 32` |
 | `BETTER_AUTH_URL` | Your site, e.g. `https://tradent.vercel.app` |
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | Step 4 |

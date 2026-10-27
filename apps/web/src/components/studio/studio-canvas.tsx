@@ -42,7 +42,7 @@ function Block({ data }: NodeProps<Node<BlockData>>) {
 const nodeTypes = { block: Block };
 
 const TOOL_NAMES: Record<string, string> = { get_quotes: "Quotes", get_bars: "Bars", get_option_chain: "Option chain", get_recent_fills: "Fills" };
-const MODEL_NAMES: Record<string, string> = { haiku: "Haiku 5.5", sonnet: "Sonnet 5.5", opus: "Opus 5.5" };
+const MODEL_NAMES: Record<string, string> = { haiku: "Haiku 5.5", sonnet: "Sonnet 5.5", opus: "Opus 5.5", gemini_flash: "Gemini 3.8 Flash" };
 
 export function cadenceText(m: number) {
   if (m === 1440) return "daily";

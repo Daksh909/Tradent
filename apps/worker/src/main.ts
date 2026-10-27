@@ -1,7 +1,7 @@
 // The worker: every minute, run due agent decisions during market hours, and
 // write DailyMetrics once after each close. Paper only (Alpaca Broker API sandbox).
 import Anthropic from "@anthropic-ai/sdk";
-import { schedulerPass } from "@tradent/agent";
+import { geminiFromKey, routedClient, schedulerPass } from "@tradent/agent";
 import { alpacaSandboxFromEnv } from "@tradent/broker";
 import { createDb } from "@tradent/db";
 
@@ -10,7 +10,11 @@ const TICK_MS = 60_000;
 
 const { db, client } = createDb();
 const broker = alpacaSandboxFromEnv();
-const anthropic = new Anthropic();
+// Claude and Gemini, each only when its key is set (Decision 22).
+const anthropic = routedClient({
+  anthropic: process.env.ANTHROPIC_API_KEY ? new Anthropic() : null,
+  gemini: process.env.GEMINI_API_KEY ? geminiFromKey(process.env.GEMINI_API_KEY) : null,
+});
 const deps = { db, broker, anthropic };
 
 const log = (event: string, data: Record<string, unknown> = {}) => console.log(JSON.stringify({ at: new Date().toISOString(), event, ...data }));

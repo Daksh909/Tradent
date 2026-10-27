@@ -78,3 +78,5 @@ Gap-filling choices made during the build, not decisions from SPEC.md's Decision
 | Migrations on deploy | Every production build runs `pnpm db:migrate` before building | `apps/web/vercel.json` |
 | Guest accounts | "Continue as guest" makes an account with no sign-in; it lives in that browser's session cookie and starts as an investor (developer tools are one toggle in Settings) | `apps/web/src/lib/auth.ts` |
 | Site-wide AI cap | All AI spend across the site stops at $50 per calendar month, on top of each developer's $10; `TRADENT_SITE_AI_CAP_USD` overrides it | `packages/core/src/constants.ts`, `packages/agent/src/runner.ts` |
+| Gemini model and price | `gemini_flash` maps to `gemini-3.8-flash` (stable, free tier as of 2026-10-26) and is priced at $0; add the paid price if billing is turned on for the key | `packages/agent/src/pricing.ts` |
+| Model when Claude isn't set up | With only `GEMINI_API_KEY`, new drafts and the chat builder use Gemini 3.8 Flash; with an Anthropic key they use Sonnet 5.5 | `apps/web/src/lib/anthropic.ts` |

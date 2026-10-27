@@ -13,8 +13,8 @@ export const LISTING_MIN_TRADES = 20;
 /** Records shorter than this carry a "Young record" badge. */
 export const YOUNG_RECORD_TRADING_DAYS = 90;
 
-/** Decision 11: models a developer can pick per agent. */
-export const AGENT_MODELS = ["haiku", "sonnet", "opus"] as const;
+/** Decision 11: models a developer can pick per agent. Decision 22 added free Gemini Flash. */
+export const AGENT_MODELS = ["haiku", "sonnet", "opus", "gemini_flash"] as const;
 export type AgentModel = (typeof AGENT_MODELS)[number];
 
 // DEFAULT: starting cash for each agent version's paper account.

@@ -22,7 +22,7 @@ const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull(
 const money = (name: string) => numeric(name, { precision: 18, scale: 6 });
 
 export const agentStatus = pgEnum("agent_status", ["draft", "forward_testing", "listed", "retired"]);
-export const agentModel = pgEnum("agent_model", ["haiku", "sonnet", "opus"]);
+export const agentModel = pgEnum("agent_model", ["haiku", "sonnet", "opus", "gemini_flash"]);
 export const strategyType = pgEnum("strategy_type", ["entry_rule", "exit_rule", "signal", "tradingview_alert", "tool_setup"]);
 export const orderSide = pgEnum("order_side", ["buy", "sell"]);
 export const orderType = pgEnum("order_type", ["market", "limit", "stop", "stop_limit"]);

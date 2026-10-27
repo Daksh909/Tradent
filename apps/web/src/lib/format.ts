@@ -19,7 +19,7 @@ export function signClass(n: number | null): string {
   return n > 0 ? "text-gain" : "text-loss";
 }
 
-export const MODEL_LABELS: Record<AgentModel, string> = { haiku: "Haiku 5.5", sonnet: "Sonnet 5.5", opus: "Opus 5.5" };
+export const MODEL_LABELS: Record<AgentModel, string> = { haiku: "Haiku 5.5", sonnet: "Sonnet 5.5", opus: "Opus 5.5", gemini_flash: "Gemini 3.8 Flash" };
 
 export function cadenceLabel(minutes: number): string {
   if (minutes % 1440 === 0) return minutes === 1440 ? "Daily" : `Every ${minutes / 1440} days`;

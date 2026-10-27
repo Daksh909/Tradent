@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { chatWithBuilder, publicBlocks, runSmokeTest, saveDraft, startForwardTest, StudioError, type BuilderReply, type ChatTurn, type Draft, type SmokeTestResult } from "@tradent/agent";
-import { getAnthropic } from "@/lib/anthropic";
+import { chatWithBuilder, ModelUnavailableError, publicBlocks, runSmokeTest, saveDraft, startForwardTest, StudioError, type BuilderReply, type ChatTurn, type Draft, type SmokeTestResult } from "@tradent/agent";
+import { defaultModel, getModelClient } from "@/lib/anthropic";
 import { getBroker } from "@/lib/broker";
 import { getDb } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
@@ -15,7 +15,7 @@ async function asDeveloper<T>(fn: (userId: string) => Promise<T>): Promise<Actio
   try {
     return { ok: true, value: await fn(user.id) };
   } catch (e) {
-    if (e instanceof StudioError) return { ok: false, error: e.message };
+    if (e instanceof StudioError || e instanceof ModelUnavailableError) return { ok: false, error: e.message };
     console.error("Studio action failed:", e);
     return { ok: false, error: "Something went wrong on our side. Nothing was changed." };
   }
@@ -23,9 +23,9 @@ async function asDeveloper<T>(fn: (userId: string) => Promise<T>): Promise<Actio
 
 export async function builderChat(history: ChatTurn[], current: Partial<Draft>): Promise<ActionResult<BuilderReply>> {
   return asDeveloper(async (userId) => {
-    const anthropic = getAnthropic();
-    if (!anthropic) throw new StudioError("The chat builder needs ANTHROPIC_API_KEY on the server.");
-    return chatWithBuilder({ db: getDb(), anthropic }, userId, history, current);
+    const anthropic = getModelClient();
+    if (!anthropic) throw new StudioError("The chat builder needs GEMINI_API_KEY or ANTHROPIC_API_KEY on the server.");
+    return chatWithBuilder({ db: getDb(), anthropic, builderModel: defaultModel() }, userId, history, current);
   });
 }
 
@@ -51,8 +51,8 @@ export async function studioSmokeTest(versionId: string): Promise<ActionResult<S
   return asDeveloper(async (userId) => {
     const broker = getBroker();
     if (!broker) throw new StudioError("The smoke test reads recent market data, so it needs the Alpaca sandbox keys on the server.");
-    const anthropic = getAnthropic();
-    if (!anthropic) throw new StudioError("The smoke test needs ANTHROPIC_API_KEY on the server.");
+    const anthropic = getModelClient();
+    if (!anthropic) throw new StudioError("The smoke test needs GEMINI_API_KEY or ANTHROPIC_API_KEY on the server.");
     return runSmokeTest({ db: getDb(), broker, anthropic }, userId, versionId);
   });
 }

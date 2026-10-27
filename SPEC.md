@@ -283,6 +283,7 @@ All decided by Daksh on 2026-10-20. Where anything above disagrees, this list wi
 | 19 | Following an agent that already holds positions | Copy current positions | The follower starts with a scaled copy of the agent's holdings, so their return tracks the agent's record exactly from the day they follow |
 | 20 | What runs the decision timer on the hosted site | GitHub Actions | A scheduled workflow calls the site's scheduler endpoint every 5 minutes for free; Vercel's free plan only runs cron jobs daily |
 | 21 | How visitors get in on the public MVP (replaces Google/GitHub sign-in for now, row 17) | Guest accounts | "Continue as guest" makes an account with one click, no sign-up. Google and GitHub buttons appear only if their keys are set. Because anyone can become a developer, all AI spend across the site also stops at $50 a month (Default) |
+| 22 | Free AI model option (adds to rows 13 and 16) | Gemini plus Claude | Developers can also pick Gemini 3.8 Flash on Google's free tier, recorded at $0. Studio warns that Google may use its prompts and data to improve its products; Claude models stay the private, paid option. Free limits are shared across the whole site |
 
 ## Still open outside the code (Daksh's actions, none blocks the build)
 
